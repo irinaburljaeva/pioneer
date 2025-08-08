@@ -77,20 +77,28 @@ body.prestart .stage{min-height:min(82vh,860px)}
 body.prestart .topbar,body.prestart .camp-toggle,body.prestart #nav{display:none!important}
 </style>
 
-<!-- Фолбэк: скрывает интро и помечает, что надо запускать тест, даже если основной JS ещё не прогрузился -->
+<!-- ФОЛБЭКИ: работают даже без основного JS -->
 <script>
 (function () {
   window.__quizShouldStart = false;
+
+  // безопасный обработчик интро
   window.startQuiz = function () {
     try {
       if (!document.body.classList.contains('prestart')) return;
       document.body.classList.remove('prestart');
       var btn = document.getElementById('startBtn');
-      if (btn) { btn.classList.add('fade-out'); setTimeout(function(){ btn.remove(); }, 300); }
-      window.__quizShouldStart = true;          // флаг «хочу стартовать»
+      if (btn) { btn.classList.add('fade-out'); setTimeout(function(){ btn.remove(); }, 250); }
+      // визуальная заглушка, чтобы было видно, что что-то происходит
+      var st = document.getElementById('stage');
+      if (st) st.innerHTML = '<div class="slide active" style="display:flex;align-items:center;justify-content:center;color:#7b6b5a">Загрузка…</div>';
+      window.__quizShouldStart = true;
       if (typeof window.renderQuestion === 'function') window.renderQuestion();
     } catch (e) { console.error('fallback startQuiz error:', e); }
   };
+
+  // безопасный обработчик костра (ничего не делает до подмены)
+  window.__toggleCampfire = function(){};
 })();
 </script>
 </head>
@@ -111,7 +119,8 @@ body.prestart .topbar,body.prestart .camp-toggle,body.prestart #nav{display:none
 
   <div class="camp-toggle">
     <label class="switch">
-      <input id="campfireSwitch" type="checkbox"/><span class="slider"></span>
+      <!-- вызываем безопасный стек через onChange -->
+      <input id="campfireSwitch" type="checkbox" onchange="window.__toggleCampfire && window.__toggleCampfire(this.checked)"/><span class="slider"></span>
     </label>
     <span style="font-size:14px;color:#555">Атмосфера костра</span>
   </div>
@@ -149,11 +158,10 @@ body.prestart .topbar,body.prestart .camp-toggle,body.prestart #nav{display:none
 
 <script>
 'use strict';
-
-/* === ВЕСЬ ОСНОВНОЙ КОД ТЕПЕРЬ ПОСЛЕ DOMContentLoaded === */
+/* === ГЛАВНЫЙ КОД: после DOMContentLoaded === */
 document.addEventListener('DOMContentLoaded', function(){
 
-  /* данные */
+  /* роли */
   var ROLES={
     "Королева красоты":"Всегда на виду, ухожена, любит сцену и линейки — центр притяжения лагеря.",
     "Любительница компота":"Главная по столовой и душевным разговорам. Знает, где добавка и с кем сидеть за столом.",
@@ -163,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function(){
     "Спортсменка":"Эстафеты, турслёт, зарядка — её стихия. Командный двигатель."
   };
 
+  /* 8 вопросов */
   var QUESTIONS=[
     {q:"Чем вы больше всего хотите заниматься в лагере?",a:[
       {t:"Готовить выступления, дефиле",r:"Королева красоты"},
@@ -222,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function(){
       {t:"Стадион/спортплощадка",r:"Спортсменка"}]}
   ];
 
-  /* элементы */
+  /* DOM-ссылки */
   var fireCanvas=document.getElementById('fireCanvas');
   var sparksCanvas=document.getElementById('sparksCanvas');
   var fctx=fireCanvas.getContext('2d');
@@ -248,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function updateFlames(){ for(var i=0;i<flamesBar.length;i++){ flamesBar[i].classList.toggle('on', i<idx); } }
 
-  /* рендер вопроса */
   function renderQuestion(){
     var q=QUESTIONS[idx], total=QUESTIONS.length;
     updateNavPadding(); updateFlames();
@@ -271,16 +279,14 @@ document.addEventListener('DOMContentLoaded', function(){
       btn.classList.add('selected'); picked={role:btn.getAttribute('data-role')}; nextBtn.disabled=false;
     });
   }
-  window.renderQuestion = renderQuestion; // доступно фолбэку
+  window.renderQuestion = renderQuestion; // чтобы фолбэк мог вызвать
 
-  /* переход */
   nextBtn.addEventListener('click', function(){
     if(!picked) return;
     scores[picked.role]=(scores[picked.role]||0)+1; idx++;
     if(idx<QUESTIONS.length){ renderQuestion(); } else { showResult(); }
   });
 
-  /* результат */
   function showResult(){
     for(var i=0;i<flamesBar.length;i++){ flamesBar[i].classList.add('on'); }
     quizCard.style.display='none'; resultSection.style.display='block';
@@ -310,8 +316,13 @@ document.addEventListener('DOMContentLoaded', function(){
     badgeWrap.appendChild(svg);
   }
 
-  /* КОСТЁР */
+  /* КОСТЁР (реальная логика) */
   var running=false, SP=[], RAF=null, lastT=0, W=0, H=0;
+  var fireCanvas=document.getElementById('fireCanvas');
+  var sparksCanvas=document.getElementById('sparksCanvas');
+  var fctx=fireCanvas.getContext('2d');
+  var sctx=sparksCanvas.getContext('2d');
+
   function resizeFX(){ W=innerWidth; H=innerHeight; [fireCanvas,sparksCanvas].forEach(function(c){ c.width=W; c.height=H; c.style.width='100%'; c.style.height='100%'; }); }
   window.addEventListener('resize', resizeFX);
 
@@ -340,11 +351,4 @@ document.addEventListener('DOMContentLoaded', function(){
     if(!running) return;
     var dt=Math.min(0.05,(t-(lastT||t))/1000); lastT=t;
     drawFire(fctx,t);
-    sctx.clearRect(0,0,W,H); sctx.globalCompositeOperation='lighter';
-    for(var i=0;i<SP.length;i++){
-      var p=SP[i], wind=Math.sin(t*0.001+p.phase)*24, jitter=Math.sin(t*0.006+p.phase)*4;
-      p.vx+=(wind*0.4)*dt; p.x+=(p.vx+jitter)*dt; p.y+=p.vy*dt; p.life-=dt;
-      var k=Math.max(0,p.life/p.maxLife), size=p.size*(0.6+0.4*k), alpha=Math.min(1,0.18+k*0.9);
-      var trail=sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
-      trail.addColorStop(0,'hsla('+(p.hue+5)+',90%,55%,'+(alpha*0.35)+')'); trail.addColorStop(1,'hsla(25,90%,50%,0)');
-      sctx.fillStyle=trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sc
+    sctx.clearRect(0,0,W,H); sctx.globalCom
