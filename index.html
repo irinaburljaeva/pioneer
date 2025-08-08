@@ -219,6 +219,23 @@ function renderQ(){
   answersEl.innerHTML = '';
   picked = null; nextBtn.disabled = true;
   quiz.classList.remove('flip');
+  setTimeout(()=>quiz.classList.add('flip'), 20); // лёгкий эффект переворота
+  q.a.forEach((opt,i)=>{
+    const b = document.createElement('button');
+    b.className = 'answer'; b.type = 'button'; b.textContent = opt.t; // используем новое поле t
+    b.addEventListener('click', ()=>{
+      picked = opt; nextBtn.disabled = false;
+      document.querySelectorAll('.answer').forEach(el=>el.style.outline='none');
+      b.style.outline = `3px solid ${getComputedStyle(document.documentElement).getPropertyValue('--accent')}`;
+    });
+    answersEl.appendChild(b);
+  });
+  barEl.style.width = ((idx)/total*100).toFixed(2)+'%';
+} из ${total}`;
+  qEl.textContent = q.q;
+  answersEl.innerHTML = '';
+  picked = null; nextBtn.disabled = true;
+  quiz.classList.remove('flip');
   setTimeout(()=>quiz.classList.add('flip'), 20); // легкий эффект переворота
   q.a.forEach((opt,i)=>{
     const b = document.createElement('button');
@@ -235,9 +252,11 @@ function renderQ(){
 
 nextBtn.addEventListener('click', ()=>{
   if(!picked) return;
-  scores[picked.r] = (scores[picked.r]||0)+1;
+  scores[picked.r] = (scores[picked.r]||0)+1; // используем новое поле r
   idx++;
   if(idx < QUESTIONS.length){ renderQ(); }
+  else { showResult(); }
+}); }
   else { showResult(); }
 });
 
@@ -379,4 +398,4 @@ function campfire(){ // шум костра: розовый шум + треск
 // старт
 renderQ();
 </script></body>
-  </html>
+</html>
