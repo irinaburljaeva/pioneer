@@ -14,7 +14,7 @@ body{
 }
 body.night::before{content:"";position:fixed;inset:0;background:var(--night);z-index:0;pointer-events:none}
 
-/* FX */
+/* FX слой */
 .fx{position:fixed;inset:0;pointer-events:none;z-index:1;display:none}
 
 /* Карточка */
@@ -24,7 +24,7 @@ body.night::before{content:"";position:fixed;inset:0;background:var(--night);z-i
 h1{margin:0;color:var(--accent);font-size:24px}
 .flames{display:flex;gap:6px}.flame{opacity:.25;transition:.2s}.flame.on{opacity:1;transform:translateY(-2px)}
 
-/* Тумблер */
+/* Тумблер костра */
 .toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
 .switch{position:relative;width:50px;height:28px;display:inline-block}
 .switch input{opacity:0;width:0;height:0}
@@ -48,19 +48,24 @@ h1{margin:0;color:var(--accent);font-size:24px}
 /* Ответы */
 .answers{
   max-height:72vh;overflow:auto;
-  padding:0 10px calc(var(--navPad) + env(safe-area-inset-bottom)) 10px; /* добавил слева/справа по 10px */
+  padding:0 10px calc(var(--navPad) + env(safe-area-inset-bottom)) 10px;
   scroll-padding-bottom:calc(var(--navPad) + 24px);
 }
 .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .answer{
   display:block;width:100%;text-align:left;padding:12px 14px;
-  border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;
+  border:3px dashed var(--blue);           /* толще базовая штриховая */
+  border-radius:12px;background:#fdf8ea;
   box-shadow:0 2px 0 rgba(0,0,0,.06);cursor:pointer;
   scroll-margin-bottom:calc(var(--navPad) + 32px)
 }
 .answer:hover{background:#fff2c7}
-/* аккуратное выделение: внешний кант, не обрезается и не наезжает */
-.answer.sel{background:#fff7ea;outline:3px solid var(--accent);outline-offset:4px}
+/* ПРИ ВЫБОРЕ: синюю рамку заменяем красной сплошной */
+.answer.sel{
+  background:#fff7ea;
+  border:3px solid var(--accent);          /* без outline и псевдоэлементов */
+  box-shadow:0 6px 18px rgba(178,34,34,.25);
+}
 
 .answers .spacer{height:calc(var(--navPad) + 80px)}
 
@@ -125,7 +130,9 @@ function startQuiz(){
         <li>«Лагерное меню»: вкусно, сытно и без чувства вины</li>
         <li><b>Онлайн-лагерь:</b> всё дистанционно — из дома выходить не нужно</li>
       </ul>
-      <p style="margin:12px 0 0">Присоединяйтесь к интенсиву «Летний лагерь» от ШАГАЙ ДОМА — <i>ваше лето начинается здесь!</i></p>
+      <p style="margin:12px 0 0">
+        Присоединяйтесь к интенсиву «Летний лагерь» от ШАГАЙ ДОМА⚡️ — чтобы худеть легко и с удовольствием!
+      </p>
       <p><a class="cta" href="https://walk-walk.ru/summer_camp?utm_source=website&utm_medium=test&utm_campaign=test" target="_blank" rel="noopener">Хочу в отряд!</a></p>
     </div>
   </section>
@@ -301,12 +308,12 @@ function renderBadge(role){
   badge.innerHTML = svg;
 }
 
-/* ===== КОСТЁР: узкая полоса, но искр БОЛЬШЕ и ЯРЧЕ ===== */
+/* ===== КОСТЁР: узкая полоса, много ярких искр ===== */
 const cv=document.getElementById('fx'), ctx=cv.getContext('2d'), audio=document.getElementById('fireAudio');
 let run=false, W=0,H=0,SP=[];
-const FIRE_SHIFT = -40;  // чуть выше
-const STRIPE     = 0.94; // нижние ~6% экрана
-const SPARKS     = 280;  // плотнее искры
+const FIRE_SHIFT = -40;  // выше
+const STRIPE     = 0.94; // нижние ~6%
+const SPARKS     = 280;  // плотнее
 
 function size(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;cv.style.display=run?'block':'none'}
 function makeSpark(){
