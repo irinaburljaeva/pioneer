@@ -16,9 +16,11 @@
     background: radial-gradient(1200px 600px at top left, #fff6d8 0%, #fffaf0 35%, #fff 60%) fixed;
     font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;
   }
+
   /* полноэкранное затемнение */
   body.camp-night::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--night-dim)}
-  /* полноэкранные эффекты */
+
+  /* полноэкранные эффекты костра */
   .fx-layer{position:fixed;inset:0;z-index:1;pointer-events:none!important;display:none;width:100%;height:100%}
 
   .page{
@@ -28,12 +30,14 @@
     overflow:hidden;
   }
 
+  /* 🔥 огоньки прогресса */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
   h1{margin:0;color:var(--accent);font-size:24px}
   .flames{display:flex;gap:6px;align-items:center}
   .flame{font-size:18px;opacity:.25;transition:opacity .25s,transform .25s}
   .flame.on{opacity:1;transform:translateY(-2px)}
 
+  /* тумблер костра */
   .camp-toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
   .switch{position:relative;display:inline-block;width:50px;height:28px}
   .switch input{opacity:0;width:0;height:0}
@@ -42,10 +46,30 @@
   .switch input:checked + .slider{background:#f59e0b}
   .switch input:checked + .slider:before{transform:translateX(22px)}
 
+  /* карточка теста */
   .card{position:relative;z-index:2;background:linear-gradient(#fffef7,#fffaf0);
         border:1px solid #e8e0c7;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
   .stage{position:relative;min-height:320px}
 
+  /* интро-оверлей */
+  .intro-cover{
+    position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(180deg,#fffdf5, #fff7e6);
+    cursor:pointer; transition:opacity .35s ease;
+  }
+  .intro-cover img{
+    width:100%; max-width:720px; height:auto; border-radius:14px;
+    box-shadow:0 12px 30px rgba(0,0,0,.18);
+    user-select:none; -webkit-user-drag:none;
+  }
+  .intro-hint{
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:14px; color:#7a6b5d; background:rgba(255,255,255,.7);
+    padding:6px 10px; border-radius:10px;
+  }
+  .intro-cover.fade-out{ opacity:0; pointer-events:none; }
+
+  /* перелистывание */
   .slide{position:absolute;inset:0;opacity:0;transform:translateX(45px) rotateY(-4deg);
          transition:transform .5s cubic-bezier(.2,.7,.2,1),opacity .5s;will-change:transform,opacity}
   .slide.active{opacity:1;transform:translateX(0) rotateY(0)}
@@ -53,12 +77,11 @@
   .slide.in-right{opacity:0;transform:translateX(45px) rotateY(-6deg)}
   .slide.in-right.active{opacity:1;transform:translateX(0) rotateY(0)}
 
+  /* вопрос/ответы */
   #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
   #question{font-size:22px;margin:6px 0 12px}
-
   .answers-wrap{
-    padding-right:4px;
-    padding-bottom:calc(var(--navH) + 16px); /* запас под sticky-кнопку */
+    padding-right:4px; padding-bottom:calc(var(--navH) + 16px);
     max-height:65vh; overflow:auto;
   }
   .answers-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
@@ -68,13 +91,16 @@
   .answer:hover{background:#fff2c7;box-shadow:0 4px 12px rgba(0,0,0,.07)}
   .answer.selected{outline:3px solid var(--accent)}
 
+  /* sticky «Далее» */
   .nav{position:sticky;bottom:0;z-index:5;display:flex;justify-content:flex-end;align-items:center;gap:12px;
        padding:10px 6px calc(10px + env(safe-area-inset-bottom));
-       background:linear-gradient(180deg,rgba(255,255,255,0),#fffaf0 40%);border-bottom-left-radius:14px;border-bottom-right-radius:14px}
+       background:linear-gradient(180deg,rgba(255,255,255,0),#fffaf0 40%);
+       border-bottom-left-radius:14px;border-bottom-right-radius:14px}
   #nextBtn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-weight:700;cursor:pointer;
            box-shadow:0 6px 18px rgba(178,34,34,.25)}
   #nextBtn:disabled{opacity:.6;box-shadow:none;cursor:not-allowed}
 
+  /* результат */
   #result{display:none;text-align:center;position:relative;z-index:2}
   .badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative}
   .cta{display:inline-block;margin-top:16px;padding:12px 24px;background:#b22222;color:#fff;border-radius:24px;text-decoration:none;font-weight:700}
@@ -82,6 +108,7 @@
 </head>
 <body>
 
+<!-- полноэкранные эффекты -->
 <canvas id="fireCanvas" class="fx-layer"></canvas>
 <canvas id="sparksCanvas" class="fx-layer"></canvas>
 
@@ -103,7 +130,15 @@
   </div>
 
   <section id="quiz" class="card" aria-live="polite">
-    <div class="stage" id="stage"><!-- сюда рисуются вопросы --></div>
+    <!-- интро здесь -->
+    <div class="intro-cover" id="introCover">
+      <img src="intro.png" alt="Летний лагерь — нажмите, чтобы начать"/>
+      <div class="intro-hint">Нажмите, чтобы начать</div>
+    </div>
+
+    <!-- сцена вопросов -->
+    <div class="stage" id="stage"></div>
+
     <div class="nav" id="nav"><button id="nextBtn" disabled>Далее</button></div>
   </section>
 
@@ -133,7 +168,7 @@
 <script>
 'use strict';
 
-/* ===== РОЛИ ===== */
+/* ===== данные ===== */
 const ROLES={
   "Королева красоты":"Всегда на виду, ухожена, любит сцену и линейки — центр притяжения лагеря.",
   "Любительница компота":"Главная по столовой и душевным разговорам. Знает, где добавка и с кем сидеть за столом.",
@@ -143,7 +178,6 @@ const ROLES={
   "Спортсменка":"Эстафеты, турслёт, зарядка — её стихия. Командный двигатель."
 };
 
-/* ===== ВОПРОСЫ: 8×6 ===== */
 const QUESTIONS=[
   {q:"Что ценного вы ждёте в посылке из дома?",a:[
     {t:"Новая косметичка и заколки",r:"Королева красоты"},
@@ -203,163 +237,153 @@ const QUESTIONS=[
     {t:"Стадион/спортплощадка",r:"Спортсменка"}]}
 ];
 
-/* ===== ИНИЦИАЛИЗАЦИЯ ===== */
-window.addEventListener('DOMContentLoaded', () => {
-  try{
-    const campSwitchEl=document.getElementById('campfireSwitch');
-    const fireCanvas=document.getElementById('fireCanvas');
-    const sparksCanvas=document.getElementById('sparksCanvas');
-    const fctx=fireCanvas.getContext('2d');
-    const sctx=sparksCanvas.getContext('2d');
-    const stage=document.getElementById('stage');
-    const flamesBar=document.getElementById('flames').querySelectorAll('.flame');
-    const resultSection=document.getElementById('result');
-    const quizCard=document.getElementById('quiz');
-    const roleEl=document.getElementById('role');
-    const descEl=document.getElementById('desc');
-    const badgeWrap=document.getElementById('badgeWrap');
-    const replayBtn=document.getElementById('replay');
-    const fireAudio=document.getElementById('fireAudio');
-    const nextBtn=document.getElementById('nextBtn');
-    const navEl=document.getElementById('nav');
+/* ===== элементы ===== */
+const campSwitchEl=document.getElementById('campfireSwitch');
+const fireCanvas=document.getElementById('fireCanvas');
+const sparksCanvas=document.getElementById('sparksCanvas');
+const fctx=fireCanvas.getContext('2d');
+const sctx=sparksCanvas.getContext('2d');
+const stage=document.getElementById('stage');
+const flamesBar=document.getElementById('flames').querySelectorAll('.flame');
+const resultSection=document.getElementById('result');
+const quizCard=document.getElementById('quiz');
+const roleEl=document.getElementById('role');
+const descEl=document.getElementById('desc');
+const badgeWrap=document.getElementById('badgeWrap');
+const replayBtn=document.getElementById('replay');
+const fireAudio=document.getElementById('fireAudio');
+const nextBtn=document.getElementById('nextBtn');
+const navEl=document.getElementById('nav');
+const introCover=document.getElementById('introCover');
 
-    let idx=0, scores=Object.create(null), picked=null;
-    let running=false, SP=[], RAF=null, lastT=0, W=0, H=0, fadeTimer=null;
+/* ===== состояние ===== */
+let idx=0, scores=Object.create(null), picked=null;
 
-    function updateNavPadding(){
-      const h=navEl.offsetHeight||64;
-      document.documentElement.style.setProperty('--navH', h+'px');
-    }
+/* динамический отступ под sticky-кнопку */
+function updateNavPadding(){
+  const h = navEl.offsetHeight || 64;
+  document.documentElement.style.setProperty('--navH', h + 'px');
+}
 
-    function renderQuestion(){
-      const total=QUESTIONS.length, q=QUESTIONS[idx];
-      updateNavPadding();
-      flamesBar.forEach((f,i)=>f.classList.toggle('on',i<idx));
-      const current=stage.querySelector('.slide.active');
-      if(current){ current.classList.remove('active'); current.classList.add('out-left'); setTimeout(()=>current.remove(),500); }
-      const slide=document.createElement('div');
-      slide.className='slide in-right';
-      slide.innerHTML=`
-        <div id="qnum">Вопрос ${idx+1} из ${total}</div>
-        <div id="question">${q.q}</div>
-        <div class="answers-wrap"><div id="answers" class="answers-grid">
-          ${q.a.map(a=>`<button class="answer" data-role="${a.r}">${a.t}</button>`).join('')}
-        </div></div>`;
-      stage.appendChild(slide);
-      requestAnimationFrame(()=>{ slide.classList.remove('in-right'); slide.classList.add('active'); });
-      picked=null; nextBtn.disabled=true;
-      slide.querySelector('#answers').addEventListener('click',(e)=>{
-        const btn=e.target.closest('.answer'); if(!btn) return;
-        slide.querySelectorAll('.answer').forEach(x=>x.classList.remove('selected'));
-        btn.classList.add('selected'); picked={role:btn.dataset.role}; nextBtn.disabled=false;
-      });
-    }
+/* прогресс-огоньки */
+function updateFlames(){ flamesBar.forEach((f,i)=> f.classList.toggle('on', i<idx)); }
 
-    nextBtn.addEventListener('click',()=>{
-      if(!picked) return;
-      scores[picked.role]=(scores[picked.role]||0)+1;
-      idx++;
-      if(idx<QUESTIONS.length) renderQuestion(); else showResult();
-    });
+/* рендер вопроса */
+function renderQuestion(){
+  const total=QUESTIONS.length, q=QUESTIONS[idx];
+  updateNavPadding(); updateFlames();
 
-    function showResult(){
-      flamesBar.forEach(f=>f.classList.add('on'));
-      quizCard.style.display='none'; resultSection.style.display='block';
-      const winner=Object.keys(scores).reduce((a,b)=>(scores[a]||0)>(scores[b]||0)?a:b);
-      roleEl.textContent=winner; descEl.textContent=ROLES[winner]; drawBadge(winner);
-    }
+  const current=stage.querySelector('.slide.active');
+  if(current){ current.classList.remove('active'); current.classList.add('out-left'); setTimeout(()=>current.remove(),500); }
 
-    function drawBadge(role){
-      badgeWrap.innerHTML='';
-      const NS='http://www.w3.org/2000/svg';
-      const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 200 200'); svg.style.width='100%'; svg.style.height='100%';
-      const defs=document.createElementNS(NS,'defs');
-      const grad=document.createElementNS(NS,'radialGradient'); grad.id='g1';
-      grad.innerHTML='<stop offset="0%" stop-color="#fff6d6"/><stop offset="60%" stop-color="#f1c16d"/><stop offset="100%" stop-color="#c58a21"/>';
-      defs.appendChild(grad); svg.appendChild(defs);
-      const circle=document.createElementNS(NS,'circle'); circle.setAttribute('cx','100'); circle.setAttribute('cy','100'); circle.setAttribute('r','78');
-      circle.setAttribute('fill','url(#g1)'); circle.setAttribute('stroke','#8a5a12'); circle.setAttribute('stroke-width','6'); svg.appendChild(circle);
-      const ribbon=document.createElementNS(NS,'path'); ribbon.setAttribute('d','M60 170 L100 130 L140 170 L120 170 L100 150 L80 170 Z');
-      ribbon.setAttribute('fill','var(--accent)'); ribbon.setAttribute('opacity','.9'); svg.appendChild(ribbon);
-      const icons={ 'Королева красоты':'👑','Любительница компота':'🥤','Самая активная участница':'⭐','Тайная проказница':'😼','Игрок в карты на карамельки':'🃏','Спортсменка':'🏅' };
-      const icon=document.createElementNS(NS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle');
-      icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a');
-      icon.textContent=icons[role]||'⭐'; svg.appendChild(icon);
-      const t=document.createElementNS(NS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
-      badgeWrap.appendChild(svg);
-    }
+  const slide=document.createElement('div');
+  slide.className='slide in-right';
+  slide.innerHTML=`
+    <div id="qnum">Вопрос ${idx+1} из ${total}</div>
+    <div id="question">${q.q}</div>
+    <div class="answers-wrap"><div id="answers" class="answers-grid">
+      ${q.a.map(a=>`<button class="answer" data-role="${a.r}">${a.t}</button>`).join('')}
+    </div></div>`;
+  stage.appendChild(slide);
+  requestAnimationFrame(()=>{ slide.classList.remove('in-right'); slide.classList.add('active'); });
 
-    /* === костёр полный экран === */
-    function resizeFX(){
-      const W=window.innerWidth, H=window.innerHeight;
-      [fireCanvas,sparksCanvas].forEach(c=>{ c.width=W; c.height=H; c.style.width='100%'; c.style.height='100%'; });
-    }
-    function drawFire(ctx,t,W,H){
-      ctx.clearRect(0,0,W,H);
-      for(let i=0;i<28;i++){
-        const cx=W*0.5+(Math.sin(t*0.002+i)*W*0.03), cy=H-25-Math.random()*35, rad=40+Math.random()*100;
-        ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*15}%,${0.05+Math.random()*0.09})`;
-        ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
-      }
-      const g=ctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.min(W,H)*0.7);
-      g.addColorStop(0,'rgba(255,170,70,0.25)'); g.addColorStop(1,'rgba(255,170,70,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    }
-    function makeSpark(W,H){
-      const sx=W*(0.46+Math.random()*0.08), sy=H+Math.random()*30, v0=90+Math.random()*160, vx=(Math.random()*2-1)*22,
-            life=1.0+Math.random()*1.6, size=1+Math.random()*2.8, hue=28+Math.random()*14, phase=Math.random()*Math.PI*2;
-      return {x:sx,y:sy,vx,vy:-v0,life,maxLife:life,size,hue,phase};
-    }
-    let running=false, SP=[], RAF=null, last=0, W=0, H=0;
-    function loop(t){
-      if(!running) return;
-      const dt=Math.min(0.05,(t-(last||t))/1000); last=t;
-      drawFire(fctx,t,W,H);
-      sctx.clearRect(0,0,W,H); sctx.globalCompositeOperation='lighter';
-      for(let i=0;i<SP.length;i++){
-        const p=SP[i], wind=Math.sin(t*0.001+p.phase)*24, jitter=Math.sin(t*0.006+p.phase)*4;
-        p.vx+=(wind*0.4)*dt; p.x+=(p.vx+jitter)*dt; p.y+=p.vy*dt; p.life-=dt;
-        const k=Math.max(0,p.life/p.maxLife), size=p.size*(0.6+0.4*k), alpha=Math.min(1,0.18+k*0.9);
-        const trail=sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
-        trail.addColorStop(0,`hsla(${p.hue+5},90%,55%,${alpha*0.35})`); trail.addColorStop(1,'hsla(25,90%,50%,0)');
-        sctx.fillStyle=trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sctx.fill();
-        const grad=sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
-        grad.addColorStop(0,`hsla(50,100%,85%,${alpha})`); grad.addColorStop(0.35,`hsla(${p.hue},95%,60%,${alpha*0.9})`);
-        grad.addColorStop(1,`hsla(${p.hue+10},90%,40%,0)`); sctx.fillStyle=grad; sctx.beginPath(); sctx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sctx.fill();
-        if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) SP[i]=makeSpark(W,H);
-      }
-      sctx.globalCompositeOperation='source-over';
-      RAF=requestAnimationFrame(loop);
-    }
-    function startFX(){
-      if(running) return; running=true;
-      W=innerWidth; H=innerHeight; resizeFX();
-      SP=Array.from({length:180},()=>makeSpark(W,H));
-      fireCanvas.style.display='block'; sparksCanvas.style.display='block'; last=0; RAF=requestAnimationFrame(loop);
-    }
-    function stopFX(){ running=false; if(RAF) cancelAnimationFrame(RAF); fireCanvas.style.display='none'; sparksCanvas.style.display='none'; }
+  picked=null; nextBtn.disabled=true;
+  slide.querySelector('#answers').addEventListener('click',(e)=>{
+    const btn=e.target.closest('.answer'); if(!btn) return;
+    slide.querySelectorAll('.answer').forEach(x=>x.classList.remove('selected'));
+    btn.classList.add('selected'); picked={role:btn.dataset.role}; nextBtn.disabled=false;
+  });
+}
 
-    let fadeTimer=null;
-    function smoothVolumeTo(target,ms,cb){
-      if(fadeTimer) clearInterval(fadeTimer);
-      const start=fireAudio.volume, t0=performance.now();
-      fadeTimer=setInterval(()=>{ const k=Math.min(1,(performance.now()-t0)/ms);
-        fireAudio.volume=start+(target-start)*k; if(k>=1){clearInterval(fadeTimer); fadeTimer=null; cb&&cb();}},16);
-    }
+/* переход по «Далее» */
+nextBtn.addEventListener('click', ()=>{
+  if(!picked) return;
+  scores[picked.role]=(scores[picked.role]||0)+1;
+  idx++;
+  if(idx<QUESTIONS.length) renderQuestion(); else showResult();
+});
 
-    campSwitchEl.addEventListener('change',(e)=>{
-      if(e.target.checked){
-        document.body.classList.add('camp-night'); startFX();
-        fireAudio.volume=0; fireAudio.loop=true; fireAudio.play().catch(()=>{});
-        smoothVolumeTo(0.5,300);
-      }else{
-        document.body.classList.remove('camp-night'); stopFX();
-        smoothVolumeTo(0,200,()=>{try{fireAudio.pause(); fireAudio.currentTime=0;}catch(_){}})
-      }
-    });
+/* результат */
+function showResult(){
+  flamesBar.forEach(f=>f.classList.add('on'));
+  quizCard.style.display='none'; resultSection.style.display='block';
+  const winner=Object.keys(scores).reduce((a,b)=>(scores[a]||0)>(scores[b]||0)?a:b);
+  roleEl.textContent=winner; descEl.textContent=ROLES[winner]; drawBadge(winner);
+}
 
-    window.addEventListener('resize',()=>{ updateNavPadding(); if(running) resizeFX(); });
+/* бейдж */
+function drawBadge(role){
+  badgeWrap.innerHTML='';
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 200 200'); svg.style.width='100%'; svg.style.height='100%';
+  const defs=document.createElementNS(NS,'defs');
+  const grad=document.createElementNS(NS,'radialGradient'); grad.id='g1';
+  grad.innerHTML='<stop offset="0%" stop-color="#fff6d6"/><stop offset="60%" stop-color="#f1c16d"/><stop offset="100%" stop-color="#c58a21"/>';
+  defs.appendChild(grad); svg.appendChild(defs);
+  const circle=document.createElementNS(NS,'circle'); circle.setAttribute('cx','100'); circle.setAttribute('cy','100'); circle.setAttribute('r','78'); circle.setAttribute('fill','url(#g1)'); circle.setAttribute('stroke','#8a5a12'); circle.setAttribute('stroke-width','6'); svg.appendChild(circle);
+  const ribbon=document.createElementNS(NS,'path'); ribbon.setAttribute('d','M60 170 L100 130 L140 170 L120 170 L100 150 L80 170 Z'); ribbon.setAttribute('fill','var(--accent)'); ribbon.setAttribute('opacity','.9'); svg.appendChild(ribbon);
+  const icons={'Королева красоты':'👑','Любительница компота':'🥤','Самая активная участница':'⭐','Тайная проказница':'😼','Игрок в карты на карамельки':'🃏','Спортсменка':'🏅'};
+  const icon=document.createElementNS(NS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle'); icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a'); icon.textContent=icons[role]||'⭐'; svg.appendChild(icon);
+  const t=document.createElementNS(NS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
+  badgeWrap.appendChild(svg);
+}
 
-    // страт
-    updateNavPadding();
-    renderQuestion();
-  
+/* костёр: полноэкранный огонь + искры + звук */
+const fireCanvasEl=document.getElementById('fireCanvas');
+const sparksCanvasEl=document.getElementById('sparksCanvas');
+let running=false, SP=[], RAF=null, lastT=0, W=0, H=0, fadeTimer=null;
+function resizeFX(){
+  W=innerWidth; H=innerHeight;
+  [fireCanvasEl,sparksCanvasEl].forEach(c=>{ c.width=W; c.height=H; c.style.width='100%'; c.style.height='100%'; });
+}
+window.addEventListener('resize', resizeFX);
+function drawFire(ctx,t){
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<28;i++){
+    const cx=W*0.5+(Math.sin(t*0.002+i)*W*0.03);
+    const cy=H-25-Math.random()*35;
+    const rad=40+Math.random()*100;
+    ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*15}%,${0.05+Math.random()*0.09})`;
+    ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
+  }
+  const g=ctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.min(W,H)*0.7);
+  g.addColorStop(0,'rgba(255,170,70,0.25)'); g.addColorStop(1,'rgba(255,170,70,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+function makeSpark(){
+  const sx=W*(0.46+Math.random()*0.08), sy=H+Math.random()*30, v0=90+Math.random()*160, vx=(Math.random()*2-1)*22,
+        life=1.0+Math.random()*1.6, size=1+Math.random()*2.8, hue=28+Math.random()*14, phase=Math.random()*Math.PI*2;
+  return {x:sx,y:sy,vx,vy:-v0,life,maxLife:life,size,hue,phase};
+}
+function loop(t){
+  if(!running) return;
+  const dt=Math.min(0.05,(t-(lastT||t))/1000); lastT=t;
+  drawFire(fctx,t);
+  sctx.clearRect(0,0,W,H); sctx.globalCompositeOperation='lighter';
+  for(let i=0;i<SP.length;i++){
+    const p=SP[i], wind=Math.sin(t*0.001+p.phase)*24, jitter=Math.sin(t*0.006+p.phase)*4;
+    p.vx+=(wind*0.4)*dt; p.x+=(p.vx+jitter)*dt; p.y+=p.vy*dt; p.life-=dt;
+    const k=Math.max(0,p.life/p.maxLife), size=p.size*(0.6+0.4*k), alpha=Math.min(1,0.18+k*0.9);
+    const trail=sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
+    trail.addColorStop(0,`hsla(${p.hue+5},90%,55%,${alpha*0.35})`); trail.addColorStop(1,'hsla(25,90%,50%,0)');
+    sctx.fillStyle=trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sctx.fill();
+    const grad=sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
+    grad.addColorStop(0,`hsla(50,100%,85%,${alpha})`); grad.addColorStop(0.35,`hsla(${p.hue},95%,60%,${alpha*0.9})`);
+    grad.addColorStop(1,`hsla(${p.hue+10},90%,40%,0)`); sctx.fillStyle=grad; sctx.beginPath(); sctx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sctx.fill();
+    if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) SP[i]=makeSpark();
+  }
+  sctx.globalCompositeOperation='source-over';
+  RAF=requestAnimationFrame(loop);
+}
+function startFX(){
+  if(running) return; running=true; resizeFX();
+  SP=Array.from({length:180}, makeSpark);
+  fireCanvasEl.style.display='block'; sparksCanvasEl.style.display='block';
+  lastT=0; RAF=requestAnimationFrame(loop);
+}
+function stopFX(){
+  running=false; if(RAF) cancelAnimationFrame(RAF);
+  fireCanvasEl.style.display='none'; sparksCanvasEl.style.display='none';
+}
+function smoothVolumeTo(target,ms,cb){
+  if(fadeTimer) clearInterval(fadeTimer);
+  const start=fireAudio.volume, t0=per
