@@ -153,7 +153,7 @@ function showResult(){
   document.getElementById('desc').textContent=ROLES[w];
   drawBadge(w);
   bar.style.width='100%';
-  startSparks(); bugle();
+  /* эффекты зависят от переключателя */ bugle();
 }
 
 // Значок (SVG)
@@ -184,38 +184,62 @@ function iconFor(role){
   }
 }
 
-// Искры костра (только на финале)
-let sparksCanvas=null, spCtx=null, spRAF=null, SP=[], running=false;
+// Атмосфера костра: искры + ночной фон + потрескивание
+let sparksCanvas=null, spCtx=null, spRAF=null, SP=[], sparksRunning=false, fireGain=null, audioCtx=null;
+const campSwitchEl = document.getElementById('campfireSwitch');
+const pageEl = document.querySelector('.page');
+
+function enableCampfire(){
+  // визуал
+  pageEl.classList.add('camp-on','night');
+  const sc = document.getElementById('sparks'); sc.style.display='block';
+  startSparks();
+  // звук
+  startCampfireSound();
+}
+function disableCampfire(){
+  pageEl.classList.remove('camp-on','night');
+  const sc = document.getElementById('sparks'); sc.style.display='none';
+  stopSparks(); stopCampfireSound();
+}
+
+campSwitchEl?.addEventListener('change', (e)=>{
+  if(e.target.checked) enableCampfire(); else disableCampfire();
+});
+
 function startSparks(){
-  if(running) return; running=true;
+  if(sparksRunning) return; sparksRunning=true;
   sparksCanvas = document.getElementById('sparks'); spCtx = sparksCanvas.getContext('2d');
-  const resize=()=>{ const r = document.getElementById('result').getBoundingClientRect(); sparksCanvas.width = r.width; sparksCanvas.height = r.height; };
+  const resize=()=>{ const r = document.getElementById('quizSection').getBoundingClientRect(); sparksCanvas.width = r.width; sparksCanvas.height = r.height; };
   resize(); addEventListener('resize', resize);
-  // создать частицы
-  const N=80; SP = Array.from({length:N},()=>makeSpark());
-  function makeSpark(){
-    return { x: Math.random()*sparksCanvas.width,
-             y: sparksCanvas.height + Math.random()*80,
-             vy: 0.6 + Math.random()*1.2,
-             size: 1 + Math.random()*2,
-             life: 1 + Math.random()*2,
-             hue: 25 + Math.random()*20,
-             a: .5 + Math.random()*.5 };
-  }
+  const N=90; SP = Array.from({length:N},()=>makeSpark());
+  function makeSpark(){ return { x: Math.random()*sparksCanvas.width, y: sparksCanvas.height + Math.random()*80, vy: 0.6 + Math.random()*1.2, size: 1 + Math.random()*2, life: 1 + Math.random()*2, hue: 25 + Math.random()*20, a: .5 + Math.random()*.5 }; }
   function loop(){
+    if(!sparksRunning) return;
     spCtx.clearRect(0,0,sparksCanvas.width,sparksCanvas.height);
-    SP.forEach(p=>{
-      p.y -= p.vy; p.a -= 0.008; if(p.a<=0 || p.y < -10){ Object.assign(p, makeSpark()); }
-      const g=spCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*3);
-      g.addColorStop(0,`hsla(${p.hue},90%,60%,${p.a})`);
-      g.addColorStop(1,'hsla(25,90%,50%,0)');
-      spCtx.fillStyle=g; spCtx.beginPath(); spCtx.arc(p.x,p.y,p.size*3,0,Math.PI*2); spCtx.fill();
-    });
+    SP.forEach(p=>{ p.y -= p.vy; p.a -= 0.008; if(p.a<=0 || p.y < -10){ Object.assign(p, { x: Math.random()*sparksCanvas.width, y: sparksCanvas.height + Math.random()*60, vy: 0.6 + Math.random()*1.2, size: 1 + Math.random()*2, life: 1 + Math.random()*2, hue: 25 + Math.random()*20, a: .5 + Math.random()*.5 }); }
+      const g=spCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*3); g.addColorStop(0,`hsla(${p.hue},90%,60%,${p.a})`); g.addColorStop(1,'hsla(25,90%,50%,0)'); spCtx.fillStyle=g; spCtx.beginPath(); spCtx.arc(p.x,p.y,p.size*3,0,Math.PI*2); spCtx.fill(); });
     spRAF = requestAnimationFrame(loop);
   }
   loop();
 }
-function stopSparks(){ if(spRAF) cancelAnimationFrame(spRAF); running=false; }
+function stopSparks(){ if(spRAF) cancelAnimationFrame(spRAF); sparksRunning=false; }
+
+function ac(){ return audioCtx || (audioCtx = new (window.AudioContext||window.webkitAudioContext)()); }
+function startCampfireSound(){
+  const ctx = ac();
+  const rate = ctx.sampleRate; const len = rate * 3; // 3 сек буфер, будет в петлю
+  const buffer = ctx.createBuffer(1, len, rate); const data = buffer.getChannelData(0);
+  let lastOut = 0; for(let i=0;i<len;i++){ // розовый шум + случайные щелчки
+    const white = Math.random()*2-1; lastOut = 0.98*lastOut + 0.02*white; data[i]=lastOut*0.5; if(Math.random()<0.002) data[i]+= (Math.random()*2-1)*0.9;
+  }
+  const src = ctx.createBufferSource(); src.buffer = buffer; src.loop = true;
+  fireGain = ctx.createGain(); fireGain.gain.value = 0.18; // тихо
+  src.connect(fireGain).connect(ctx.destination); src.start();
+  // сохраняем, чтобы можно было стопнуть
+  startCampfireSound._src = src;
+}
+function stopCampfireSound(){ try{ startCampfireSound._src?.stop(); }catch(e){} if(fireGain){ fireGain.disconnect(); fireGain=null; } }
 
 // Звуки (WebAudio) (WebAudio)
 let AC; function ac(){ return AC || (AC = new (window.AudioContext||window.webkitAudioContext)()); }
@@ -227,4 +251,4 @@ function bugle(){ const ctx=ac(); const now=ctx.currentTime; [523.25,659.25,783.
 // Старт по клику на интро
 intro.addEventListener('click',()=>{ intro.style.display='none'; quizSection.style.display='block'; renderQ(); });
 </script></body>
-        </html>
+</html>
