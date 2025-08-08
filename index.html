@@ -2,7 +2,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Кто ты в летнем лагере? — ШАГАЙ ДОМА</title>
 <style>
-:root{--ink:#2e2623;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f;--night:rgba(10,12,18,.5);--navPad:160px}
+:root{--ink:#2e2623;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f;--night:rgba(10,12,18,.5);--navPad:200px}
 html,body{height:100%}
 body{margin:0;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;background:radial-gradient(1200px 600px at top left,#fff6d8 0%,#fffaf0 35%,#fff 60%) fixed}
 body.night::before{content:"";position:fixed;inset:0;background:var(--night);z-index:0;pointer-events:none}
@@ -24,7 +24,7 @@ h1{margin:0;color:var(--accent);font-size:24px}
 .card{position:relative;background:linear-gradient(#fffef7,#fffaf0);border:1px solid #e8e0c7;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
 .stage{position:relative;min-height:340px}
 
-/* интро — крупнее и с сохранением пропорций */
+/* интро — крупное, с сохранением пропорций */
 .intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0;background:transparent;border:0;cursor:pointer;z-index:9}
 .intro img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);pointer-events:none;user-select:none}
 .intro.hide{opacity:0;pointer-events:none;transition:.25s}
@@ -35,21 +35,25 @@ h1{margin:0;color:var(--accent);font-size:24px}
 #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
 #question{font-size:22px;margin:6px 0 12px}
 
-/* ответы: большой динамический отступ + spacer + scroll-padding */
+/* ответы: большой локальный отступ + spacer + scroll-padding + scroll-margin */
 .answers{
   max-height:65vh;overflow:auto;padding-right:4px;
   padding-bottom:calc(var(--navPad) + env(safe-area-inset-bottom));
   scroll-padding-bottom:calc(var(--navPad) + 24px);
 }
 .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;box-shadow:0 2px 0 rgba(0,0,0,.06);cursor:pointer}
+.answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;box-shadow:0 2px 0 rgba(0,0,0,.06);cursor:pointer;scroll-margin-bottom:calc(var(--navPad) + 32px)}
 .answer:hover{background:#fff2c7}.answer.sel{outline:3px solid var(--accent)}
-.answers .spacer{height:calc(var(--navPad) + 64px)} /* гарантированно выше кнопки */
+.answers .spacer{height:calc(var(--navPad) + 80px)} /* гарантированно выше кнопки */
 
 .nav{position:sticky;bottom:0;z-index:3;background:linear-gradient(180deg,transparent,#fffaf0 40%);
   padding:10px 6px calc(10px + env(safe-area-inset-bottom));border-bottom-left-radius:14px;border-bottom-right-radius:14px;display:flex;justify-content:flex-end}
 #next{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 20px;font-weight:700;box-shadow:0 6px 18px rgba(178,34,34,.25)}
 #next:disabled{opacity:.6;box-shadow:none}
+/* компактная кнопка на узких экранах */
+@media (max-width:420px){
+  #next{padding:10px 16px;font-size:15px;border-radius:10px}
+}
 
 #result{text-align:center;display:none}
 .badge{width:180px;height:180px;margin:16px auto 8px}
@@ -191,10 +195,14 @@ const quiz=document.getElementById('quiz');
 const roleEl=document.getElementById('role'), descEl=document.getElementById('desc'), badge=document.getElementById('badge');
 const nav=document.getElementById('nav');
 
-/* динамический отступ под кнопку */
+/* динамический отступ под кнопку (и локально у блока ответов) */
 function setNavPad(){
   const h = nav ? Math.ceil(nav.getBoundingClientRect().height) : 64;
-  document.documentElement.style.setProperty('--navPad', (h + 110) + 'px'); // ЩЕДРЫЙ запас для мобилок
+  const pad = h + 120; // щедрый запас
+  document.documentElement.style.setProperty('--navPad', pad+'px');
+  // если на экране уже есть блок ответов — обновим его локально
+  const curAnswers = stage.querySelector('.answers');
+  if(curAnswers) curAnswers.style.paddingBottom = pad+'px';
 }
 setNavPad();
 new ResizeObserver(setNavPad).observe(nav);
@@ -216,13 +224,17 @@ function renderQuestion(){
   stage.appendChild(el); requestAnimationFrame(()=>el.classList.add('active'));
   pick=null; nextBtn.disabled=true;
 
+  // локальный паддинг под панель
+  const answersEl = el.querySelector('.answers');
+  (function setLocal(){ const h = Math.ceil(nav.getBoundingClientRect().height)+120; answersEl.style.paddingBottom=h+'px'; })();
+  new ResizeObserver(()=>{ const h=Math.ceil(nav.getBoundingClientRect().height)+120; answersEl.style.paddingBottom=h+'px'; }).observe(nav);
+
   const grid=el.querySelector('.grid');
   grid.addEventListener('click',e=>{
     const btn=e.target.closest('.answer'); if(!btn) return;
     grid.querySelectorAll('.answer').forEach(b=>b.classList.remove('sel'));
     btn.classList.add('sel'); pick=btn.dataset.r; nextBtn.disabled=false;
-    // гарантируем видимость выбранного ответа
-    btn.scrollIntoView({block:'nearest',behavior:'smooth'});
+    btn.scrollIntoView({block:'nearest',behavior:'smooth'}); // показываем выбранный
   });
 
   setNavPad();
@@ -259,10 +271,10 @@ function showResult(){
   </svg>`;
 }
 
-/* ===== КОСТЁР: короткая полоса снизу ===== */
+/* ===== КОСТЁР: узкая полоса снизу ===== */
 const cv=document.getElementById('fx'), ctx=cv.getContext('2d'), audio=document.getElementById('fireAudio');
 let run=false, W=0,H=0,parts=[];
-const FIRE_SHIFT = -60; // чуть поднят вверх
+const FIRE_SHIFT = -40; // поднят немного вверх
 
 function size(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;cv.style.display=run?'block':'none'}
 function spark(){
@@ -273,12 +285,11 @@ function spark(){
 }
 function drawFire(ctx,t){
   ctx.clearRect(0,0,W,H);
-  // рисуем ПЛАМЯ только в нижних ~20% экрана
-  const stripeTop = H*0.8;
+  const stripeTop = H*0.82; // показываем только нижние 18% экрана
   ctx.save(); ctx.beginPath(); ctx.rect(0,stripeTop,W,H-stripeTop); ctx.clip();
 
   const baseW=W, baseY=H + FIRE_SHIFT;
-  for(let k=0;k<24;k++){
+  for(let k=0;k<22;k++){
     const sway=Math.sin(t*0.0018+k)*baseW*0.16;
     const jitter=(Math.random()-0.5)*baseW*0.10;
     const cx=W*0.5+sway+jitter, cy=baseY-28-Math.random()*36, r=baseW*(0.035+Math.random()*0.07);
@@ -293,9 +304,8 @@ function drawFire(ctx,t){
 function loop(ts){
   if(!run) return;
   drawFire(ctx,ts);
-  // искры — поверх, без клипа
   ctx.globalCompositeOperation='lighter';
-  for(let j=0;j<120;j++){
+  for(let j=0;j<110;j++){
     if(!parts[j]) parts[j]=spark();
     const p=parts[j]; p.x+=p.vx*.016; p.y+=p.vy*.016; p.life-=.016;
     const a=Math.max(0,Math.min(1,p.life)), sz=p.s*(.8+.4*a);
@@ -307,7 +317,7 @@ function loop(ts){
   ctx.globalCompositeOperation='source-over';
   requestAnimationFrame(loop);
 }
-function startFire(){if(run) return; run=true; size(); parts=Array(120); requestAnimationFrame(loop);}
+function startFire(){if(run) return; run=true; size(); parts=Array(110); requestAnimationFrame(loop);}
 function stopFire(){run=false; size();}
 window.addEventListener('resize',size);
 document.getElementById('camp').addEventListener('change',e=>{
