@@ -48,7 +48,7 @@
 </head>
 <body>
 <div class="page">
-    <div class="intro" id="intro" role="button" tabindex="0">
+    <div class="intro" id="intro" role="button" tabindex="0" onclick="window.startQuiz && window.startQuiz()">
     <img src="intro.png" alt="Нажмите, чтобы начать тест" onclick="window.startQuiz && window.startQuiz()" />
   </div>  <div id="quizSection" style="position:relative;">
     <h1>Кто ты в летнем лагере?</h1>
@@ -298,5 +298,4 @@ window.startQuiz = startQuiz; // запасной план для inline-обр�
 document.addEventListener('DOMContentLoaded', function(){
   if(intro){
     intro.addEventListener('click', startQuiz);
-    intro.addEventListener('keydown', (e)=>{
-      if(e.key==='Enter' || e.key===' '){ e.pre
+    intro.addEventListener('keydown', (e)=>
