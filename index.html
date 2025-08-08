@@ -10,7 +10,6 @@
   html,body{height:100%}
   body{
     margin:0; color:var(--ink);
-    /* оставила только надёжный фон-градиент, чтобы не было ERR_INVALID_URL */
     background: radial-gradient(1200px 600px at top left, #fff6d8 0%, #fffaf0 35%, #fff 60%) fixed;
     font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;
     transition: filter .3s ease;
@@ -25,18 +24,19 @@
   /* Intro */
   .intro{
     display:flex;justify-content:center;align-items:center;
-    position:relative; z-index:10; transition:opacity .3s ease;
+    position:relative; z-index:10;
   }
   .intro img{
     max-width:100%; max-height:100vh; height:auto; width:auto;
     display:block; margin:0 auto; object-fit:contain;
     cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.2); border-radius:14px;
+    outline:none;
   }
 
   #quizSection{ display:none; position:relative; }
   h1{ margin:0 0 8px; text-align:center; color:var(--accent); }
 
-  /* Перелистывающаяся карточка */
+  /* Карточка-вопрос (перелистывание) */
   .card{
     background:linear-gradient(#fffef7,#fffaf0);
     border:2px solid #e7d9b6; border-radius:16px; padding:18px 18px 22px;
@@ -47,6 +47,7 @@
   }
   .flip{ transform: rotateY(-12deg); }
 
+  /* Навигация и прогресс */
   .nav{display:flex;align-items:center;gap:12px;margin-top:14px}
   .progress{height:10px;background:#f1e6c8;border-radius:999px;overflow:hidden;flex:1;border:1px solid #e7d9b6}
   .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#ff7a59);transition:width .5s}
@@ -57,7 +58,7 @@
   .answer{
     display:block; width:100%; text-align:left; padding:12px 14px;
     border:2px dashed var(--blue); border-radius:12px; background:#fdf8ea;
-    cursor:pointer; transition: background .2s, transform .05s; pointer-events:auto;
+    cursor:pointer; transition: background .2s, transform .05s;
   }
   .answer:hover{ background:#fff2c7 }
   .answer.selected{ outline:3px solid var(--accent) }
@@ -93,7 +94,7 @@
   #result{display:none;text-align:center}
   .badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative}
 
-  /* Кнопка призыва */
+  /* CTA */
   .cta{display:inline-block;margin-top:16px;padding:12px 24px;background:#b22222;color:#fff;border-radius:24px;text-decoration:none;font-weight:700}
 </style>
 </head>
@@ -141,7 +142,7 @@
           <li>Зарядки-дискотеки каждый день (движение в удовольствие)</li>
           <li>Лагерные игры, душевные посиделки и поддержка команды</li>
           <li>«Лагерное меню»: вкусно, сытно и без чувства вины</li>
-          <li>Теплая атмосфера и реальные результаты без насилия над собой</li>
+          <li>Тёплая атмосфера и реальные результаты без насилия над собой</li>
         </ul>
         <p style="margin:12px 0 0;">Присоединяйтесь к интенсиву «Летний лагерь» от ШАГАЙ ДОМА — <em>ваше лето начинается здесь!</em></p>
         <p><a class="cta" href="https://walk-walk.ru/summer_camp?utm_source=website&utm_medium=test&utm_campaign=test" target="_blank" rel="noopener">Хочу в отряд!</a></p>
@@ -155,32 +156,48 @@
 </div>
 
 <script>
-/* ====== ГЛОБАЛЬНАЯ функция запуска (важно: определена заранее) ====== */
+/* ===== ГЛОБАЛЬНЫЙ старт (без анимаций, максимально надёжно) ===== */
 function startQuiz(){
-  const introEl = document.getElementById('intro');
-  const quizEl  = document.getElementById('quizSection');
-  // плавное исчезновение
-  introEl.style.opacity = '0';
-  setTimeout(()=>{
-    introEl.style.display = 'none';
-    quizEl.style.display  = 'block';
-    renderQ();
-  }, 300);
+  var introEl = document.getElementById('intro');
+  var quizEl  = document.getElementById('quizSection');
+  if (introEl) introEl.style.display = 'none';
+  if (quizEl)  quizEl.style.display  = 'block';
+  renderQ();
 }
 
-/* Привязываем к самой картинке intro.png */
-document.addEventListener('DOMContentLoaded', ()=>{
-  const img = document.getElementById('introImg');
-  if(img){
-    img.addEventListener('click', startQuiz);
-    img.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); startQuiz(); } });
-    img.setAttribute('tabindex','0');
-    img.style.cursor = 'pointer';
+/* Привязка строго к intro.png + фоллбек */
+(function bindIntro(){
+  function bind(){
+    var img = document.getElementById('introImg');
+    if(!img){ setTimeout(bind, 50); return; }
+    // Полная замена узла, чтобы удалить возможные старые слушатели
+    var clone = img.cloneNode(true);
+    img.parentNode.replaceChild(clone, img);
+    clone.style.cursor = 'pointer';
+    clone.setAttribute('tabindex','0');
+
+    var handler = function(e){ e.preventDefault(); startQuiz(); };
+    clone.addEventListener('click', handler, {capture:true, once:true});
+    clone.addEventListener('keydown', function(e){
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); startQuiz(); }
+    });
   }
-});
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind);
+  } else {
+    bind();
+  }
+
+  // Фоллбек: первый клик по странице тоже запустит тест, если интро ещё видно
+  document.addEventListener('click', function once(){
+    var introEl = document.getElementById('intro');
+    if(introEl && getComputedStyle(introEl).display !== 'none') startQuiz();
+    document.removeEventListener('click', once);
+  }, {capture:true});
+})();
 
 /* ===== Роли ===== */
-const ROLES = {
+var ROLES = {
   "Звезда линейки":"Всегда на первых рядах, галстук как с обложки, осанка — пример для всех. Линейка для неё — как красная дорожка.",
   "Хозяйка тихого часа":"Мастер читать под одеялом и обмениваться книжками «из-под полы». Может проспать полдня, но всё равно в курсе всех лагерных событий.",
   "Королева костра":"Гитара, песни, страшилки и разговоры «до отбоя». Вечером вокруг неё собирается весь отряд.",
@@ -191,7 +208,7 @@ const ROLES = {
 };
 
 /* ===== Вопросы (8) ===== */
-const QUESTIONS = [
+var QUESTIONS = [
   {q:"Что для вас самое важное в лагере?",a:[
     {t:"Выглядеть на все 100",r:"Звезда линейки"},
     {t:"Поспать и почитать",r:"Хозяйка тихого часа"},
@@ -267,60 +284,60 @@ const QUESTIONS = [
 ];
 
 /* ===== DOM ===== */
-const quizSection = document.getElementById('quizSection');
-const campSwitchEl = document.getElementById('campfireSwitch');
-const pageEl = document.querySelector('.page');
+var quizSection = document.getElementById('quizSection');
+var campSwitchEl = document.getElementById('campfireSwitch');
+var pageEl = document.querySelector('.page');
 
-const quiz = document.getElementById('quiz');
-const qnumEl = document.getElementById('qnum');
-const qEl = document.getElementById('question');
-const answersEl = document.getElementById('answers');
-const nextBtn = document.getElementById('nextBtn');
-const bar = document.getElementById('bar');
+var quiz = document.getElementById('quiz');
+var qnumEl = document.getElementById('qnum');
+var qEl = document.getElementById('question');
+var answersEl = document.getElementById('answers');
+var nextBtn = document.getElementById('nextBtn');
+var bar = document.getElementById('bar');
 
-const resultSection = document.getElementById('result');
-const roleEl = document.getElementById('role');
-const descEl = document.getElementById('desc');
-const badgeWrap = document.getElementById('badgeWrap');
+var resultSection = document.getElementById('result');
+var roleEl = document.getElementById('role');
+var descEl = document.getElementById('desc');
+var badgeWrap = document.getElementById('badgeWrap');
 
-const sparksCanvas = document.getElementById('sparks');
-const spCtx = sparksCanvas.getContext('2d');
+var sparksCanvas = document.getElementById('sparks');
+var spCtx = sparksCanvas.getContext('2d');
 
 /* ===== Состояние ===== */
-let idx = 0; let scores = Object.create(null); let picked = null;
+var idx = 0; var scores = Object.create(null); var picked = null;
 
 /* Делегирование кликов — один раз */
-answersEl.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.answer');
+answersEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.answer');
   if(!btn) return;
   picked = { t: btn.textContent, r: btn.dataset.role };
   nextBtn.disabled = false;
-  answersEl.querySelectorAll('.answer').forEach(el=>el.classList.remove('selected'));
+  [].forEach.call(answersEl.querySelectorAll('.answer'), function(el){ el.classList.remove('selected'); });
   btn.classList.add('selected');
 });
 
 /* ===== Рендер вопроса с перелистыванием ===== */
 function renderQ(){
-  const total = QUESTIONS.length, q = QUESTIONS[idx];
-  qnumEl.textContent = `Вопрос ${idx+1} из ${total}`;
+  var total = QUESTIONS.length, q = QUESTIONS[idx];
+  qnumEl.textContent = "Вопрос " + (idx+1) + " из " + total;
   qEl.textContent = q.q;
   answersEl.innerHTML = '';
   picked = null; nextBtn.disabled = true;
 
   quiz.classList.remove('flip');
-  setTimeout(()=>quiz.classList.add('flip'), 20);
+  setTimeout(function(){ quiz.classList.add('flip'); }, 20);
 
-  q.a.forEach((opt,i)=>{
-    const b = document.createElement('button');
+  q.a.forEach(function(opt,i){
+    var b = document.createElement('button');
     b.type='button'; b.className='answer'; b.textContent=opt.t; b.dataset.role=opt.r;
     b.style.opacity=0; b.style.transform='translateY(6px)';
-    setTimeout(()=>{b.style.transition='opacity .25s ease, transform .25s ease'; b.style.opacity=1; b.style.transform='translateY(0)';}, 60*i);
+    setTimeout(function(){ b.style.transition='opacity .25s ease, transform .25s ease'; b.style.opacity=1; b.style.transform='translateY(0)'; }, 60*i);
     answersEl.appendChild(b);
   });
   bar.style.width = ((idx)/total*100)+'%';
 }
 
-nextBtn.addEventListener('click', ()=>{
+nextBtn.addEventListener('click', function(){
   if(!picked) return;
   scores[picked.r] = (scores[picked.r]||0)+1;
   idx++;
@@ -329,11 +346,11 @@ nextBtn.addEventListener('click', ()=>{
 });
 
 /* ===== Результат ===== */
-function winner(){ return Object.keys(scores).reduce((a,b)=> scores[a]>scores[b]?a:b); }
+function winner(){ return Object.keys(scores).reduce(function(a,b){ return scores[a]>scores[b]?a:b; }); }
 function showResult(){
   quiz.style.display='none';
   resultSection.style.display='block';
-  const w = winner();
+  var w = winner();
   roleEl.textContent = w;
   descEl.textContent = ROLES[w];
   drawBadge(w);
@@ -343,16 +360,16 @@ function showResult(){
 /* Значок (SVG) */
 function drawBadge(role){
   badgeWrap.innerHTML='';
-  const svgNS='http://www.w3.org/2000/svg';
-  const svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox','0 0 200 200'); svg.style.width='100%'; svg.style.height='100%';
-  const defs=document.createElementNS(svgNS,'defs');
-  const grad=document.createElementNS(svgNS,'radialGradient'); grad.id='g1';
+  var svgNS='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox','0 0 200 200'); svg.style.width='100%'; svg.style.height='100%';
+  var defs=document.createElementNS(svgNS,'defs');
+  var grad=document.createElementNS(svgNS,'radialGradient'); grad.id='g1';
   grad.innerHTML='<stop offset="0%" stop-color="#fff6d6"/><stop offset="60%" stop-color="#f1c16d"/><stop offset="100%" stop-color="#c58a21"/>';
   defs.appendChild(grad); svg.appendChild(defs);
-  const circle=document.createElementNS(svgNS,'circle'); circle.setAttribute('cx','100'); circle.setAttribute('cy','100'); circle.setAttribute('r','78'); circle.setAttribute('fill','url(#g1)'); circle.setAttribute('stroke','#8a5a12'); circle.setAttribute('stroke-width','6'); svg.appendChild(circle);
-  const ribbon=document.createElementNS(svgNS,'path'); ribbon.setAttribute('d','M60 170 L100 130 L140 170 L120 170 L100 150 L80 170 Z'); ribbon.setAttribute('fill','var(--accent)'); ribbon.setAttribute('opacity','.9'); svg.appendChild(ribbon);
-  const icon=document.createElementNS(svgNS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle'); icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a'); icon.textContent=iconFor(role); svg.appendChild(icon);
-  const t=document.createElementNS(svgNS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
+  var circle=document.createElementNS(svgNS,'circle'); circle.setAttribute('cx','100'); circle.setAttribute('cy','100'); circle.setAttribute('r','78'); circle.setAttribute('fill','url(#g1)'); circle.setAttribute('stroke','#8a5a12'); circle.setAttribute('stroke-width','6'); svg.appendChild(circle);
+  var ribbon=document.createElementNS(svgNS,'path'); ribbon.setAttribute('d','M60 170 L100 130 L140 170 L120 170 L100 150 L80 170 Z'); ribbon.setAttribute('fill','var(--accent)'); ribbon.setAttribute('opacity','.9'); svg.appendChild(ribbon);
+  var icon=document.createElementNS(svgNS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle'); icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a'); icon.textContent=iconFor(role); svg.appendChild(icon);
+  var t=document.createElementNS(svgNS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
   badgeWrap.appendChild(svg);
 }
 function iconFor(role){
@@ -369,25 +386,25 @@ function iconFor(role){
 }
 
 /* ===== Атмосфера костра (искры + звук) ===== */
-let sparksRunning=false, SP=[], spRAF=null, lastTime=0, windT=0;
-let campAudio=null, fadeTimer=null;
+var sparksRunning=false, SP=[], spRAF=null, lastTime=0, windT=0;
+var campAudio=null, fadeTimer=null;
 
 function resizeSparks(){
-  const r = quizSection.getBoundingClientRect();
+  var r = quizSection.getBoundingClientRect();
   sparksCanvas.width = r.width; sparksCanvas.height = r.height;
 }
 addEventListener('resize', resizeSparks);
 
 function makeSpark(){
-  const w = sparksCanvas.width, h = sparksCanvas.height;
-  const sx = w * 0.45 + Math.random()*w*0.10;
-  const sy = h + Math.random()*30;
-  const v0 = 60 + Math.random()*140;
-  const vx = (Math.random()*2 - 1) * 20;
-  const life = 0.8 + Math.random()*1.6;
-  const size = 1 + Math.random()*2.3;
-  const phase = Math.random()*Math.PI*2;
-  return { x:sx, y:sy, vx, vy:-v0, size, life, maxLife:life, phase, hue: 30 + Math.random()*12 };
+  var w = sparksCanvas.width, h = sparksCanvas.height;
+  var sx = w * 0.45 + Math.random()*w*0.10;
+  var sy = h + Math.random()*30;
+  var v0 = 60 + Math.random()*140;
+  var vx = (Math.random()*2 - 1) * 20;
+  var life = 0.8 + Math.random()*1.6;
+  var size = 1 + Math.random()*2.3;
+  var phase = Math.random()*Math.PI*2;
+  return { x:sx, y:sy, vx:vx, vy:-v0, size:size, life:life, maxLife:life, phase:phase, hue: 30 + Math.random()*12 };
 }
 function startSparks(){
   if(sparksRunning) return; sparksRunning=true; resizeSparks();
@@ -397,31 +414,18 @@ function startSparks(){
 function stopSparks(){ sparksRunning=false; if(spRAF) cancelAnimationFrame(spRAF); }
 function loopSparks(){
   if(!sparksRunning) return;
-  const now = performance.now(); let dt = (now - lastTime)/1000; if(dt>0.05) dt=0.05; lastTime=now; windT+=dt;
-  const w = sparksCanvas.width, h = sparksCanvas.height;
+  var now = performance.now(); var dt = (now - lastTime)/1000; if(dt>0.05) dt=0.05; lastTime=now; windT+=dt;
+  var w = sparksCanvas.width, h = sparksCanvas.height;
   spCtx.clearRect(0,0,w,h); spCtx.globalCompositeOperation='lighter';
-  for(let i=0;i<SP.length;i++){
-    const p = SP[i];
-    const wind = Math.sin(windT*0.9 + p.phase)*20; const jitter = Math.sin(windT*6 + p.phase)*4;
+  for(var i=0;i<SP.length;i++){
+    var p = SP[i];
+    var wind = Math.sin(windT*0.9 + p.phase)*20; var jitter = Math.sin(windT*6 + p.phase)*4;
     p.vx += (wind*0.5) * dt; p.x += (p.vx + jitter) * dt; p.y += p.vy * dt;
-    p.life -= dt; const k = Math.max(0, p.life/p.maxLife); const size = p.size * (0.6 + 0.4*k); const alpha = Math.min(1, 0.15 + k*0.9);
-    const trail = spCtx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
-    trail.addColorStop(0, `hsla(${p.hue+5},90%,55%,${alpha*0.35})`); trail.addColorStop(1,'hsla(25,90%,50%,0)');
+    p.life -= dt; var k = Math.max(0, p.life/p.maxLife); var size = p.size * (0.6 + 0.4*k); var alpha = Math.min(1, 0.15 + k*0.9);
+    var trail = spCtx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
+    trail.addColorStop(0, 'hsla('+(p.hue+5)+',90%,55%,'+(alpha*0.35)+')'); trail.addColorStop(1,'hsla(25,90%,50%,0)');
     spCtx.fillStyle = trail; spCtx.beginPath(); spCtx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); spCtx.fill();
-    const grad = spCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
-    grad.addColorStop(0, `hsla(50,100%,85%,${alpha})`); grad.addColorStop(0.35, `hsla(${p.hue},95%,60%,${alpha*0.9})`); grad.addColorStop(1, `hsla(${p.hue+10},90%,40%,0)`);
+    var grad = spCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
+    grad.addColorStop(0, 'hsla(50,100%,85%,'+alpha+')'); grad.addColorStop(0.35, 'hsla('+p.hue+',95%,60%,'+(alpha*0.9)+')'); grad.addColorStop(1, 'hsla('+(p.hue+10)+',90%,40%,0)');
     spCtx.fillStyle = grad; spCtx.beginPath(); spCtx.arc(p.x,p.y,size*2.2,0,Math.PI*2); spCtx.fill();
-    if (p.life<=0 || p.y<-20 || p.x<-20 || p.x>w+20){ if(Math.random()<0.08){ const big=makeSpark(); big.size*=1.6; big.vy*=1.15; SP[i]=big; } else SP[i]=makeSpark(); }
-  }
-  spCtx.globalCompositeOperation='source-over';
-  spRAF = requestAnimationFrame(loopSparks);
-}
-
-/* звук fire.mp3 с плавным входом/выходом */
-function startFireAudio(){
-  if(!campAudio){ campAudio = new Audio('fire.mp3'); campAudio.loop = true; campAudio.volume = 0.0; }
-  const p = campAudio.play(); if(p && p.catch){ p.catch(()=>{}); }
-  smoothVolumeTo(0.5, 300);
-}
-function stopFireAudio(){ smoothVolumeTo(0.0, 200, ()=>{ try{ campAudio.pause(); campAudio.currentTime=0; }catch(e){} }); }
-functi
+    if (p.life<=0 || p.y<-20 || p.x<-20 || p.x>w+20){ if
