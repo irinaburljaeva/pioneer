@@ -4,53 +4,125 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Кто ты в летнем лагере? — ШАГАЙ ДОМА</title>
 <style>
+  :root{--ink:#3a2f2f;--accent:#b22222;--paper:#fff8e6}
+  html,body{height:100%}
   body{
-    margin:0; color:#3a2f2f;
+    margin:0; color:var(--ink);
     background:
       url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABa0lEQVRYR+2WPU4DMQxFP7RykBBGqI5oOwiUUN4nHBhQsW8EhRCKn0kz0gUwTTtCjFDy2+TgfL2t1n/3b3yMzueANZbABQkgDc6DkHfg+T5XEtW0CqoA9TkKEB8QgsDTR9HUBioDYHqKMUSxV8wHd9ySx13cTHmP9LQIbUeV0sANXIggGqIMHNhCObVWADMYf0QImxq9wBGyIpUV1Bo+5O6EBryrtpApDL6vlIMvgnQXhe+ACaBS8C1YDO+AyoCh2FNsAZ43nF5QHXgVrwD+i8xGeUrrQ+rmABlg6jQwGpjD88U10Af0YO0+KUnQXikAH2EEXSgApC4BLbAE6gBESbtD7kGgJTkVR0gwK5oaPfF+XLO19NccM+mJvU6MHVRo2EM5EMQvMbdoLMp8oUNPlzGckILatK62ziYB5ra+c+OfgAKxThXH2SlZzAAAAAElFTkSuQmCC') repeat,
       radial-gradient(1200px 600px at top left, #fff6d8 0%, #fffaf0 35%, #fff 60%) fixed;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", Arial, sans-serif;
+    font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;
   }
-  .page{max-width:860px;margin:24px auto;padding:20px;position:relative;background:rgba(255,248,220,0.95);border:5px double #b22222;border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.15);}
-  .intro{display:flex;justify-content:center;align-items:center;cursor:pointer;}
-  .intro img{max-width:100%;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.2);transition:transform 0.3s;}
-  .intro img:hover{transform:scale(1.02);}
-  #quizSection{display:none;}
+  .page{max-width:860px;margin:24px auto;padding:20px;background:var(--paper);border:5px double var(--accent);border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.15);position:relative}
+  /* Intro overlay */
+  .intro{display:flex;justify-content:center;align-items:center;cursor:pointer}
+  .intro img{max-width:100%;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.2);transition:transform .25s}
+  .intro img:hover{transform:scale(1.02)}
+  #quizSection{display:none}
+  h1{margin:0 0 8px;text-align:center;color:var(--accent)}
+  #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
+  #question{font-size:22px;margin:6px 0 12px}
+  #answers{display:grid;gap:10px}
+  .answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed #1f4a7f;border-radius:12px;background:#fdf8ea;cursor:pointer;transition:background .2s,transform .05s;type:button}
+  .answer:hover{background:#fff2c7}
+  .answer.selected{outline:3px solid var(--accent)}
+  #nextBtn{margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
+  #nextBtn:disabled{opacity:.6;cursor:not-allowed}
+  #result{display:none;text-align:center}
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="intro" id="introScreen">
-    <img src="intro.png" alt="Начать тест" />
+  <div class="intro" id="intro">
+    <img src="intro.png" alt="Нажмите, чтобы начать тест" />
   </div>  <div id="quizSection">
-    <header>
-      <h1>Кто ты в летнем лагере?</h1>
-    </header>
+    <h1>Кто ты в летнем лагере?</h1>
     <div id="quiz" aria-live="polite">
       <div id="qnum"></div>
       <div id="question"></div>
       <div id="answers"></div>
       <button id="nextBtn" disabled>Далее</button>
     </div>
-    <div id="result" style="display:none;">
+    <div id="result">
       <h2 id="role"></h2>
       <p id="desc"></p>
-      <button onclick="location.reload()">Пройти ещё раз</button>
+      <button id="replay">Пройти ещё раз</button>
     </div>
   </div>
-</div>
-<script>
-const ROLES = {"Звезда линейки":"Всегда на первых рядах, галстук как с обложки, осанка — пример для всех. Линейка для неё — как красная дорожка.","Хозяйка тихого часа":"Мастер читать под одеялом и обмениваться книжками «из-под полы». Может проспать полдня, но всё равно в курсе всех лагерных событий.","Королева костра":"Гитара, песни, страшилки и разговоры «до отбоя». Вечером вокруг неё собирается весь отряд.","Чемпионка турслёта":"Первая в эстафете, незаменимая в походах. Знает, как разжечь костёр, и может донести котелок даже по самому крутому склону.","Карамельная королева":"Мастер карточных игр на фантики, обменов и карамельных сделок. У неё всегда есть сладости и пара секретов в запасе.","Любительница компота":"Знает расписание всех приёмов пищи, дружит с дежурными по столовой и всегда находит способ взять добавку.","Секретная хулиганка":"С виду пай-девочка, но только до отбоя. Может подложить зубную пасту в тапок или намылить ручку соседнего отряда."};const QUESTIONS = [ {q:"Что для вас самое важное в лагере?",a:[{t:"Выглядеть на все 100",r:"Звезда линейки"},{t:"Поспать и почитать",r:"Хозяйка тихого часа"},{t:"Вечера у костра",r:"Королева костра"},{t:"Побеждать в эстафетах",r:"Чемпионка турслёта"},{t:"Обмены сладостями",r:"Карамельная королева"},{t:"Компот и вкусности",r:"Любительница компота"},{t:"Весёлые розыгрыши",r:"Секретная хулиганка"}]}, {q:"Что вы ждёте в посылке из дома?",a:[{t:"Новую форму/заколки",r:"Звезда линейки"},{t:"Книгу или журнал",r:"Хозяйка тихого часа"},{t:"Фонарик и батарейки",r:"Королева костра"},{t:"Кроссовки для эстафет",r:"Чемпионка турслёта"},{t:"Пакет карамелек",r:"Карамельная королева"},{t:"Домашнее варенье",r:"Любительница компота"},{t:"Шуточную открытку",r:"Секретная хулиганка"}]} ];
+</div><script>
+// Данные
+const ROLES = {
+  "Звезда линейки":"Всегда на первых рядах, галстук как с обложки, осанка — пример для всех. Линейка для неё — как красная дорожка.",
+  "Хозяйка тихого часа":"Мастер читать под одеялом и обмениваться книжками «из-под полы». Может проспать полдня, но всё равно в курсе всех лагерных событий.",
+  "Королева костра":"Гитара, песни, страшилки и разговоры «до отбоя». Вечером вокруг неё собирается весь отряд.",
+  "Чемпионка турслёта":"Первая в эстафете, незаменимая в походах. Знает, как разжечь костёр, и может донести котелок даже по самому крутому склону.",
+  "Карамельная королева":"Мастер карточных игр на фантики, обменов и карамельных сделок. У неё всегда есть сладости и пара секретов в запасе.",
+  "Любительница компота":"Знает расписание всех приёмов пищи, дружит с дежурными по столовой и всегда находит способ взять добавку.",
+  "Секретная хулиганка":"С виду пай-девочка, но только до отбоя. Может подложить зубную пасту в тапок или намылить ручку соседнего отряда."
+};
 
-let idx=0, scores={}, picked=null; const qnumEl=document.getElementById('qnum'),qEl=document.getElementById('question'),answersEl=document.getElementById('answers'),nextBtn=document.getElementById('nextBtn');
+const QUESTIONS = [
+  {q:"Что для вас самое важное в лагере?",a:[{t:"Выглядеть на все 100",r:"Звезда линейки"},{t:"Поспать и почитать",r:"Хозяйка тихого часа"},{t:"Вечера у костра",r:"Королева костра"},{t:"Побеждать в эстафетах",r:"Чемпионка турслёта"},{t:"Обмены сладостями",r:"Карамельная королева"},{t:"Компот и вкусности",r:"Любительница компота"},{t:"Весёлые розыгрыши",r:"Секретная хулиганка"}]},
+  {q:"Что вы ждёте в посылке из дома?",a:[{t:"Новую форму/заколки",r:"Звезда линейки"},{t:"Книгу или журнал",r:"Хозяйка тихого часа"},{t:"Фонарик и батарейки",r:"Королева костра"},{t:"Кроссовки для эстафет",r:"Чемпионка турслёта"},{t:"Пакет карамелек",r:"Карамельная королева"},{t:"Домашнее варенье",r:"Любительница компота"},{t:"Шуточную открытку",r:"Секретная хулиганка"}]},
+  {q:"Ваш любимый момент лагерного дня:",a:[{t:"Торжественная линейка",r:"Звезда линейки"},{t:"Тихий час",r:"Хозяйка тихого часа"},{t:"Посиделки у костра",r:"Королева костра"},{t:"Спортивные соревнования",r:"Чемпионка турслёта"},{t:"Обмен фантиками",r:"Карамельная королева"},{t:"Обед/полдник",r:"Любительница компота"},{t:"Время после отбоя",r:"Секретная хулиганка"}]},
+  {q:"Свободный вечер — что выберете?",a:[{t:"Подготовить форму на завтра",r:"Звезда линейки"},{t:"Досмотреть книжку/подремать",r:"Хозяйка тихого часа"},{t:"Придумать песню/историю",r:"Королева костра"},{t:"Потренироваться к стартам",r:"Чемпионка турслёта"},{t:"Разменять фантики на карамельки",r:"Карамельная королева"},{t:"Заглянуть на кухню за добавкой",r:"Любительница компота"},{t:"Организовать безобидный розыгрыш",r:"Секретная хулиганка"}]},
+  {q:"Самое вкусное в столовой — это…",a:[{t:"Манная каша/котлета с пюре",r:"Звезда линейки"},{t:"Булочка к чаю",r:"Хозяйка тихого часа"},{t:"Горячий чай (даже если из столовой)",r:"Королева костра"},{t:"Макароны с тушёнкой",r:"Чемпионка турслёта"},{t:"Шоколадка из обмена",r:"Карамельная королева"},{t:"Компот или кисель",r:"Любительница компота"},{t:"Всё подряд, лишь бы весело",r:"Секретная хулиганка"}]},
+  {q:"Дождливый день в лагере — ваш выбор:",a:[{t:"Навести лоск: причёска/галстук",r:"Звезда линейки"},{t:"Плед и книга под окно",r:"Хозяйка тихого часа"},{t:"Петь под гитару в корпусе",r:"Королева костра"},{t:"Тренировка в спортзале",r:"Чемпионка турслёта"},{t:"Обмен сладостями/настолки",r:"Карамельная королева"},{t:"Чай с печеньем и компот",r:"Любительница компота"},{t:"Организовать квест-розыгрыш",r:"Секретная хулиганка"}]},
+  {q:"Что вы чаще всего теряли в лагере?",a:[{t:"Значок/галстук",r:"Звезда линейки"},{t:"Закладку для книги",r:"Хозяйка тихого часа"},{t:"Фонарик",r:"Королева костра"},{t:"Спортивную повязку",r:"Чемпионка турслёта"},{t:"Шоколадку (её «выиграли»)",r:"Карамельная королева"},{t:"Стакан для компота",r:"Любительница компота"},{t:"Ключ от тумбочки (иногда)",r:"Секретная хулиганка"}]},
+  {q:"Объявили «Смотр песни и строя». Ваша реакция?",a:[{t:"Выпрямить спину и вперёд!",r:"Звезда линейки"},{t:"Поспать полчасика до репетиции",r:"Хозяйка тихого часа"},{t:"Придумать речёвку у костра",r:"Королева костра"},{t:"Разминка и чёткий шаг",r:"Чемпионка турслёта"},{t:"Договориться о карамельках за крик команды",r:"Карамельная королева"},{t:"После смотра — в столовую!",r:"Любительница компота"},{t:"Подложить свисток вожатой (шутка)",r:"Секретная хулиганка"}]}
+];
 
-function renderQ(){ const total=QUESTIONS.length, q=QUESTIONS[idx]; qnumEl.textContent=Вопрос ${idx+1} из ${total}; qEl.textContent=q.q;answersEl.innerHTML='';picked=null;nextBtn.disabled=true; q.a.forEach(opt=>{ const b=document.createElement('button'); b.textContent=opt.t;b.className='answer'; b.onclick=()=>{picked=opt;nextBtn.disabled=false;document.querySelectorAll('.answer').forEach(el=>el.style.outline='none');b.style.outline='3px solid #b22222';}; answersEl.appendChild(b); }); }
+// Логика
+let idx=0, scores=Object.create(null), picked=null;
+const intro = document.getElementById('intro');
+const quizSection = document.getElementById('quizSection');
+const qnumEl=document.getElementById('qnum'), qEl=document.getElementById('question');
+const answersEl=document.getElementById('answers');
+const nextBtn=document.getElementById('nextBtn');
 
-nextBtn.onclick=()=>{ if(!picked)return; scores[picked.r]=(scores[picked.r]||0)+1;idx++; if(idx<QUESTIONS.length){renderQ();}else{showResult();} };
+function renderQ(){
+  const total=QUESTIONS.length, q=QUESTIONS[idx];
+  qnumEl.textContent=`Вопрос ${idx+1} из ${total}`;
+  qEl.textContent=q.q;
+  answersEl.innerHTML='';
+  picked=null; nextBtn.disabled=true;
+  q.a.forEach(opt=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='answer';
+    b.textContent=opt.t;
+    b.addEventListener('click',()=>{
+      picked=opt; nextBtn.disabled=false;
+      document.querySelectorAll('.answer').forEach(el=>el.classList.remove('selected'));
+      b.classList.add('selected');
+    });
+    answersEl.appendChild(b);
+  });
+}
 
-function showResult(){ document.getElementById('quiz').style.display='none'; document.getElementById('result').style.display='block'; const winner=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b); document.getElementById('role').textContent=winner; document.getElementById('desc').textContent=ROLES[winner]; }
+nextBtn.addEventListener('click',()=>{
+  if(!picked) return;
+  scores[picked.r]=(scores[picked.r]||0)+1;
+  idx++;
+  if(idx<QUESTIONS.length){ renderQ(); }
+  else { showResult(); }
+});
 
-document.getElementById('introScreen').onclick=()=>{ document.getElementById('introScreen').style.display='none'; document.getElementById('quizSection').style.display='block'; renderQ(); }; </script>
+function showResult(){
+  document.getElementById('quiz').style.display='none';
+  const res=document.getElementById('result'); res.style.display='block';
+  const winner=Object.keys(scores).reduce((a,b)=> scores[a]>scores[b]?a:b);
+  document.getElementById('role').textContent=winner;
+  document.getElementById('desc').textContent=ROLES[winner];
+}
 
-</body>
+document.getElementById('replay').addEventListener('click',()=>location.reload());
+
+// Старт по клику на интро
+intro.addEventListener('click',()=>{
+  intro.style.display='none';
+  quizSection.style.display='block';
+  renderQ();
+});
+</script></body>
 </html>
