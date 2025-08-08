@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Кто ты в летнем лагере? — ШАГАЙ ДОМА</title>
 <style>
-  :root{--ink:#3a2f2f;--accent:#b22222;--paper:#fff8e6}
+  :root{--ink:#3a2f2f;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f}
   html,body{height:100%}
   body{
     margin:0; color:var(--ink);
@@ -13,41 +13,62 @@
       radial-gradient(1200px 600px at top left, #fff6d8 0%, #fffaf0 35%, #fff 60%) fixed;
     font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;
   }
-  .page{max-width:860px;margin:24px auto;padding:20px;background:var(--paper);border:5px double var(--accent);border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.15);position:relative}
+  .page{max-width:860px;margin:24px auto;padding:20px;background:var(--paper);border:5px double var(--accent);border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.15);position:relative;perspective:1200px}
   /* Intro overlay */
   .intro{display:flex;justify-content:center;align-items:center;cursor:pointer}
   .intro img{max-width:100%;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.2);transition:transform .25s}
   .intro img:hover{transform:scale(1.02)}
   #quizSection{display:none}
   h1{margin:0 0 8px;text-align:center;color:var(--accent)}
+  .card{background:linear-gradient(#fffef7,#fffaf0);border:2px solid #e7d9b6;border-radius:16px;padding:18px 18px 22px;transform-origin:left center;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.7,.2,1), opacity .4s;box-shadow:0 10px 24px rgba(0,0,0,.08)}
+  .flip{transform:rotateY(-12deg)}
+  .nav{display:flex;align-items:center;gap:12px;margin-top:14px}
+  .progress{height:10px;background:#f1e6c8;border-radius:999px;overflow:hidden;flex:1;border:1px solid #e7d9b6}
+  .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#ff7a59);transition:width .5s}
   #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
   #question{font-size:22px;margin:6px 0 12px}
   #answers{display:grid;gap:10px}
-  .answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed #1f4a7f;border-radius:12px;background:#fdf8ea;cursor:pointer;transition:background .2s,transform .05s;type:button}
+  @media(min-width:700px){#answers{grid-template-columns:1fr 1fr}}
+  .answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;cursor:pointer;transition:background .2s,transform .05s}
   .answer:hover{background:#fff2c7}
   .answer.selected{outline:3px solid var(--accent)}
   #nextBtn{margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
   #nextBtn:disabled{opacity:.6;cursor:not-allowed}
   #result{display:none;text-align:center}
-</style>
+  /* Тёплое свечение на финале */
+  .campfire::before{
+    content:""; position:absolute; inset:-10%; z-index:0; pointer-events:none;
+    background: radial-gradient(60% 40% at 50% 100%, rgba(255,160,64,.35) 0%, rgba(255,120,40,.22) 35%, rgba(255,90,20,.12) 55%, rgba(0,0,0,0) 70%);
+    animation: glow 2.4s ease-in-out infinite alternate;
+  }
+  @keyframes glow{ from{ filter: brightness(1); transform: translateY(0)} to{ filter: brightness(1.08); transform: translateY(-1.5%)} }
+  .sparks{ z-index:0 }.badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative} </style>
+
 </head>
 <body>
 <div class="page">
-  <div class="intro" id="intro">
+    <div class="intro" id="intro">
     <img src="intro.png" alt="Нажмите, чтобы начать тест" />
   </div>  <div id="quizSection">
     <h1>Кто ты в летнем лагере?</h1>
-    <div id="quiz" aria-live="polite">
+    <section id="quiz" class="card" aria-live="polite">
       <div id="qnum"></div>
       <div id="question"></div>
       <div id="answers"></div>
-      <button id="nextBtn" disabled>Далее</button>
-    </div>
-    <div id="result">
-      <h2 id="role"></h2>
-      <p id="desc"></p>
-      <button id="replay">Пройти ещё раз</button>
-    </div>
+      <div class="nav">
+        <div class="progress"><div class="bar" id="bar"></div></div>
+        <button id="nextBtn" disabled>Далее</button>
+      </div>
+    </section>
+    <section id="result" class="campfire" style="position:relative; overflow:hidden">
+      <canvas id="sparks" class="sparks" style="position:absolute; inset:0; pointer-events:none;"></canvas>
+      <div class="badge-wrap" id="badgeWrap"></div>
+      <h2 id="role" style="margin:6px 0 6px;color:var(--accent); position:relative; z-index:1"></h2>
+      <p id="desc" style="max-width:650px;margin:0 auto;line-height:1.5; position:relative; z-index:1"></p>
+      <div style="margin-top:12px; position:relative; z-index:1">
+        <button id="replay" class="answer" style="border-style:solid;text-align:center">Пройти ещё раз</button>
+      </div>
+    </section>
   </div>
 </div><script>
 // Данные
@@ -72,13 +93,15 @@ const QUESTIONS = [
   {q:"Объявили «Смотр песни и строя». Ваша реакция?",a:[{t:"Выпрямить спину и вперёд!",r:"Звезда линейки"},{t:"Поспать полчасика до репетиции",r:"Хозяйка тихого часа"},{t:"Придумать речёвку у костра",r:"Королева костра"},{t:"Разминка и чёткий шаг",r:"Чемпионка турслёта"},{t:"Договориться о карамельках за крик команды",r:"Карамельная королева"},{t:"После смотра — в столовую!",r:"Любительница компота"},{t:"Подложить свисток вожатой (шутка)",r:"Секретная хулиганка"}]}
 ];
 
-// Логика
+// Логика + вау-эффекты
 let idx=0, scores=Object.create(null), picked=null;
 const intro = document.getElementById('intro');
 const quizSection = document.getElementById('quizSection');
+const quiz = document.getElementById('quiz');
 const qnumEl=document.getElementById('qnum'), qEl=document.getElementById('question');
 const answersEl=document.getElementById('answers');
 const nextBtn=document.getElementById('nextBtn');
+const bar=document.getElementById('bar');
 
 function renderQ(){
   const total=QUESTIONS.length, q=QUESTIONS[idx];
@@ -86,11 +109,13 @@ function renderQ(){
   qEl.textContent=q.q;
   answersEl.innerHTML='';
   picked=null; nextBtn.disabled=true;
-  q.a.forEach(opt=>{
+  quiz.classList.remove('flip');
+  setTimeout(()=>quiz.classList.add('flip'),20);
+  q.a.forEach((opt,i)=>{
     const b=document.createElement('button');
-    b.type='button';
-    b.className='answer';
-    b.textContent=opt.t;
+    b.type='button'; b.className='answer'; b.textContent=opt.t;
+    b.style.opacity=0; b.style.transform='translateY(6px)';
+    setTimeout(()=>{b.style.transition='opacity .25s ease, transform .25s ease'; b.style.opacity=1; b.style.transform='translateY(0)';}, 60*i);
     b.addEventListener('click',()=>{
       picked=opt; nextBtn.disabled=false;
       document.querySelectorAll('.answer').forEach(el=>el.classList.remove('selected'));
@@ -98,6 +123,7 @@ function renderQ(){
     });
     answersEl.appendChild(b);
   });
+  bar.style.width = ((idx)/total*100)+'%';
 }
 
 nextBtn.addEventListener('click',()=>{
@@ -108,21 +134,88 @@ nextBtn.addEventListener('click',()=>{
   else { showResult(); }
 });
 
+function winner(){ return Object.keys(scores).reduce((a,b)=> scores[a]>scores[b]?a:b); }
+
 function showResult(){
-  document.getElementById('quiz').style.display='none';
+  quiz.style.display='none';
   const res=document.getElementById('result'); res.style.display='block';
-  const winner=Object.keys(scores).reduce((a,b)=> scores[a]>scores[b]?a:b);
-  document.getElementById('role').textContent=winner;
-  document.getElementById('desc').textContent=ROLES[winner];
+  const w=winner();
+  document.getElementById('role').textContent=w;
+  document.getElementById('desc').textContent=ROLES[w];
+  drawBadge(w);
+  bar.style.width='100%';
+  startSparks(); bugle();
 }
 
-document.getElementById('replay').addEventListener('click',()=>location.reload());
+// Значок (SVG)
+function drawBadge(role){
+  const wrap=document.getElementById('badgeWrap'); wrap.innerHTML='';
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg'); svg.setAttribute('viewBox','0 0 200 200'); svg.style.width='100%'; svg.style.height='100%';
+  const defs=document.createElementNS(svgNS,'defs');
+  const grad=document.createElementNS(svgNS,'radialGradient'); grad.id='g1';
+  grad.innerHTML='<stop offset="0%" stop-color="#fff6d6"/><stop offset="60%" stop-color="#f1c16d"/><stop offset="100%" stop-color="#c58a21"/>';
+  defs.appendChild(grad); svg.appendChild(defs);
+  const circle=document.createElementNS(svgNS,'circle'); circle.setAttribute('cx','100'); circle.setAttribute('cy','100'); circle.setAttribute('r','78'); circle.setAttribute('fill','url(#g1)'); circle.setAttribute('stroke','#8a5a12'); circle.setAttribute('stroke-width','6'); svg.appendChild(circle);
+  const ribbon=document.createElementNS(svgNS,'path'); ribbon.setAttribute('d','M60 170 L100 130 L140 170 L120 170 L100 150 L80 170 Z'); ribbon.setAttribute('fill','var(--accent)'); ribbon.setAttribute('opacity','.9'); svg.appendChild(ribbon);
+  const icon=document.createElementNS(svgNS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle'); icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a'); icon.textContent=iconFor(role); svg.appendChild(icon);
+  const t=document.createElementNS(svgNS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
+  wrap.appendChild(svg);
+}
+function iconFor(role){
+  switch(role){
+    case 'Звезда линейки': return '★';
+    case 'Хозяйка тихого часа': return '☕';
+    case 'Королева костра': return '🔥';
+    case 'Чемпионка турслёта': return '🏅';
+    case 'Карамельная королева': return '🍬';
+    case 'Любительница компота': return '🥤';
+    case 'Секретная хулиганка': return '😼';
+    default: return '⭐';
+  }
+}
+
+// Искры костра (только на финале)
+let sparksCanvas=null, spCtx=null, spRAF=null, SP=[], running=false;
+function startSparks(){
+  if(running) return; running=true;
+  sparksCanvas = document.getElementById('sparks'); spCtx = sparksCanvas.getContext('2d');
+  const resize=()=>{ const r = document.getElementById('result').getBoundingClientRect(); sparksCanvas.width = r.width; sparksCanvas.height = r.height; };
+  resize(); addEventListener('resize', resize);
+  // создать частицы
+  const N=80; SP = Array.from({length:N},()=>makeSpark());
+  function makeSpark(){
+    return { x: Math.random()*sparksCanvas.width,
+             y: sparksCanvas.height + Math.random()*80,
+             vy: 0.6 + Math.random()*1.2,
+             size: 1 + Math.random()*2,
+             life: 1 + Math.random()*2,
+             hue: 25 + Math.random()*20,
+             a: .5 + Math.random()*.5 };
+  }
+  function loop(){
+    spCtx.clearRect(0,0,sparksCanvas.width,sparksCanvas.height);
+    SP.forEach(p=>{
+      p.y -= p.vy; p.a -= 0.008; if(p.a<=0 || p.y < -10){ Object.assign(p, makeSpark()); }
+      const g=spCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*3);
+      g.addColorStop(0,`hsla(${p.hue},90%,60%,${p.a})`);
+      g.addColorStop(1,'hsla(25,90%,50%,0)');
+      spCtx.fillStyle=g; spCtx.beginPath(); spCtx.arc(p.x,p.y,p.size*3,0,Math.PI*2); spCtx.fill();
+    });
+    spRAF = requestAnimationFrame(loop);
+  }
+  loop();
+}
+function stopSparks(){ if(spRAF) cancelAnimationFrame(spRAF); running=false; }
+
+// Звуки (WebAudio) (WebAudio)
+let AC; function ac(){ return AC || (AC = new (window.AudioContext||window.webkitAudioContext)()); }
+function bugle(){ const ctx=ac(); const now=ctx.currentTime; [523.25,659.25,783.99,1046.5].forEach((f,i)=>{ const o=ctx.createOscillator(), g=ctx.createGain(); o.type='square'; o.frequency.value=f; o.connect(g); g.connect(ctx.destination); const t=now+i*0.18; o.start(t); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.35,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+.16); o.stop(t+.18); }); }
+
+// Кнопки
+ document.getElementById('replay').addEventListener('click',()=>location.reload());
 
 // Старт по клику на интро
-intro.addEventListener('click',()=>{
-  intro.style.display='none';
-  quizSection.style.display='block';
-  renderQ();
-});
+intro.addEventListener('click',()=>{ intro.style.display='none'; quizSection.style.display='block'; renderQ(); });
 </script></body>
 </html>
