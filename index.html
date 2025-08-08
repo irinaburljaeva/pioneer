@@ -49,7 +49,7 @@
 <body>
 <div class="page">
     <div class="intro" id="intro">
-    <img id="introImg" src="intro.png" alt="Нажмите, чтобы начать тест" />
+    <img id="introImg" src="intro.png" alt="Нажмите, чтобы начать тест" tabindex="0" onclick="startQuiz()" />
   </div>  <div id="quizSection" style="position:relative;">
     <h1>Кто ты в летнем лагере?</h1>
     <div class="camp-toggle" style="display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px">
@@ -296,5 +296,4 @@ function startQuiz(){
       quizEl.style.display='block';
       renderQ();
     }, 300);
-  }catch(err){ console.error('Start quiz error:', err); }
-}catch(e
+  }catch(err){ console.error('S
