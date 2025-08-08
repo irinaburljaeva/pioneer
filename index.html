@@ -55,11 +55,11 @@ body.prestart .stage{min-height:min(82vh,860px)}
 /* — не перекрывать «Далее» — */
 .answers-wrap{
   padding-right:4px;
-  padding-bottom:calc(var(--navH) + 48px); /* + запас под кнопку */
+  padding-bottom:calc(var(--navH) + 48px);
   max-height:65vh;overflow:auto
 }
 @media (max-width:420px){
-  .answers-wrap{ padding-bottom:140px; } /* на очень узких экранах */
+  .answers-wrap{ padding-bottom:140px; }
 }
 .answers-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;cursor:pointer;
@@ -104,8 +104,9 @@ body.prestart .topbar,body.prestart .camp-toggle,body.prestart #nav{display:none
   </div>
 
   <section id="quiz" class="card" aria-live="polite">
-    <!-- интро -->
-    <button id="startBtn" class="intro-cover" type="button" aria-label="Начать тест">
+    <!-- интро с инлайн-обработчиком -->
+    <button id="startBtn" class="intro-cover" type="button"
+            aria-label="Начать тест" onclick="startQuiz()">
       <img src="intro.png" alt="Летний лагерь — начните тест"/>
     </button>
 
@@ -350,4 +351,4 @@ function startFX(){ if(running) return; running=true; resizeFX(); SP=Array.from(
 function stopFX(){ running=false; if(RAF) cancelAnimationFrame(RAF); fireCanvas.style.display='none'; sparksCanvas.style.display='none'; }
 campSwitch.addEventListener('change',function(e){
   if(e.target.checked){ document.body.classList.add('camp-night'); startFX(); try{fireAudio.volume=0.5; fireAudio.play().catch(function(){});}catch(_){}} 
-  else { document.body.classList.remove('camp-night'); stopFX(); tr
+  else { document.body.classList.remove('camp-night'); stopFX(); 
