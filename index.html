@@ -12,31 +12,20 @@
     background:radial-gradient(1200px 600px at top left,#fff6d8 0%,#fffaf0 35%,#fff 60%) fixed;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;
   }
-
-  /* ночное затемнение для костра */
   body.camp-night::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--night-dim)}
-  /* полноэкранные эффекты огня */
-  .fx-layer{position:fixed;inset:0;z-index:1;pointer-events:none!important;display:none;width:100%;height:100%}
+  .fx-layer{position:fixed;inset:0;z-index:1;pointer-events:none;display:none;width:100%;height:100%}
 
-  /* карточка с приятной «обводкой» */
   .page{
-    max-width:900px; margin:20px auto; padding:20px; position:relative; z-index:2;
-    background:var(--paper); border-radius:18px; overflow:hidden;
-    box-shadow:
-      0 30px 60px rgba(0,0,0,.14),
-      inset 0 0 0 2px #e7d9b6,
-      0 0 0 6px rgba(255,255,255,.7),
-      inset 0 0 0 8px #f4ecd1;
+    max-width:900px;margin:20px auto;padding:20px;position:relative;z-index:2;background:var(--paper);border-radius:18px;overflow:hidden;
+    box-shadow:0 30px 60px rgba(0,0,0,.14), inset 0 0 0 2px #e7d9b6, 0 0 0 6px rgba(255,255,255,.7), inset 0 0 0 8px #f4ecd1;
   }
 
-  /* шапка (скрывается до старта) */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
   h1{margin:0;color:var(--accent);font-size:24px}
   .flames{display:flex;gap:6px;align-items:center}
   .flame{font-size:18px;opacity:.25;transition:opacity .25s,transform .25s}
   .flame.on{opacity:1;transform:translateY(-2px)}
 
-  /* тумблер костра (тоже скрыт до старта) */
   .camp-toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
   .switch{position:relative;display:inline-block;width:50px;height:28px}
   .switch input{opacity:0;width:0;height:0}
@@ -53,22 +42,22 @@
   .intro-cover{
     position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center;
     background:linear-gradient(180deg,#fffdf5,#fff7e6); cursor:pointer; transition:opacity .35s ease;
-    touch-action:manipulation; padding:8px;
+    padding:10px; touch-action:manipulation;
   }
-  /* во время интро — делаем карточку выше, чтобы картинка точно влезла */
-  body.prestart .stage{ min-height: min(78vh, 820px); }
+  /* при интро увеличим высоту, чтобы картинка точно влезла */
+  body.prestart .stage{ min-height:min(82vh, 860px); }
 
   .intro-cover img{
     max-width:100%; max-height:100%;
     width:auto; height:auto; object-fit:contain;
     border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.18);
-    user-select:none; -webkit-user-drag:none; pointer-events:none; /* кликаем по контейнеру */
+    user-select:none; -webkit-user-drag:none; pointer-events:none;
   }
   .intro-cover.fade-out{opacity:0;pointer-events:none}
 
-  /* перелистывание */
+  /* слайды */
   .slide{position:absolute;inset:0;opacity:0;transform:translateX(45px) rotateY(-4deg);
-         transition:transform .5s cubic-bezier(.2,.7,.2,1),opacity .5s;will-change:transform,opacity}
+         transition:transform .5s cubic-bezier(.2,.7,.2,1),opacity .5s}
   .slide.active{opacity:1;transform:translateX(0) rotateY(0)}
   .slide.out-left{opacity:0;transform:translateX(-45px) rotateY(6deg)}
   .slide.in-right{opacity:0;transform:translateX(45px) rotateY(-6deg)}
@@ -94,7 +83,7 @@
   .badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative}
   .cta{display:inline-block;margin-top:16px;padding:12px 24px;background:#b22222;color:#fff;border-radius:24px;text-decoration:none;font-weight:700}
 
-  /* прячем интерфейс до старта */
+  /* спрятать интерфейс до старта */
   body.prestart .topbar,
   body.prestart .camp-toggle,
   body.prestart #nav { display:none !important; }
@@ -102,7 +91,6 @@
 </head>
 <body class="prestart">
 
-<!-- полноэкранные эффекты -->
 <canvas id="fireCanvas" class="fx-layer"></canvas>
 <canvas id="sparksCanvas" class="fx-layer"></canvas>
 
@@ -129,9 +117,7 @@
       <img src="intro.png" alt="Летний лагерь — начните тест" />
     </div>
 
-    <!-- сцена вопросов -->
     <div class="stage" id="stage"></div>
-
     <div class="nav" id="nav"><button id="nextBtn" disabled>Далее</button></div>
   </section>
 
@@ -161,7 +147,7 @@
 <script>
 'use strict';
 
-/* ---------- данные ---------- */
+/* ===== данные ===== */
 const ROLES={
   "Королева красоты":"Всегда на виду, ухожена, любит сцену и линейки — центр притяжения лагеря.",
   "Любительница компота":"Главная по столовой и душевным разговорам. Знает, где добавка и с кем сидеть за столом.",
@@ -170,7 +156,7 @@ const ROLES={
   "Игрок в карты на карамельки":"Тактик и стратег. Даже фантики обменивает с выгодой.",
   "Спортсменка":"Эстафеты, турслёт, зарядка — её стихия. Командный двигатель."
 };
-const QUESTIONS=[
+const QUESTIONS=[ /* 8×6 */ 
   {q:"Что ценного вы ждёте в посылке из дома?",a:[
     {t:"Новая косметичка и заколки",r:"Королева красоты"},
     {t:"Баночка варенья/вкусности",r:"Любительница компота"},
@@ -229,7 +215,7 @@ const QUESTIONS=[
     {t:"Стадион/спортплощадка",r:"Спортсменка"}]}
 ];
 
-/* ---------- элементы ---------- */
+/* ===== элементы ===== */
 const campSwitchEl=document.getElementById('campfireSwitch');
 const fireCanvas=document.getElementById('fireCanvas');
 const sparksCanvas=document.getElementById('sparksCanvas');
@@ -243,15 +229,14 @@ const roleEl=document.getElementById('role');
 const descEl=document.getElementById('desc');
 const badgeWrap=document.getElementById('badgeWrap');
 const replayBtn=document.getElementById('replay');
-const fireAudio=document.getElementById('fireAudio');
 const nextBtn=document.getElementById('nextBtn');
 const navEl=document.getElementById('nav');
 const introCover=document.getElementById('introCover');
+const fireAudio=document.getElementById('fireAudio'); // ← теперь объявлена только ОДИН раз
 
-/* ---------- состояние ---------- */
 let idx=0, scores=Object.create(null), picked=null;
 
-/* вспомогательные */
+/* утилиты */
 function updateNavPadding(){ document.documentElement.style.setProperty('--navH',(navEl.offsetHeight||64)+'px'); }
 function updateFlames(){ flamesBar.forEach((f,i)=> f.classList.toggle('on', i<idx)); }
 
@@ -279,7 +264,6 @@ function renderQuestion(){
   });
 }
 
-/* переход «Далее» */
 nextBtn.addEventListener('click', ()=>{
   if(!picked) return;
   scores[picked.role]=(scores[picked.role]||0)+1; idx++;
@@ -308,17 +292,14 @@ function drawBadge(role){
   const ribbon=document.createElementNS(NS,'path'); ribbon.setAttribute('d','M60 170 L100 130 L140 170 L120 170 L100 150 L80 170 Z');
   ribbon.setAttribute('fill','var(--accent)'); ribbon.setAttribute('opacity','.9'); svg.appendChild(ribbon);
   const icons={'Королева красоты':'👑','Любительница компота':'🥤','Самая активная участница':'⭐','Тайная проказница':'😼','Игрок в карты на карамельки':'🃏','Спортсменка':'🏅'};
-  const icon=document.createElementNS(NS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle');
-  icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a');
-  icon.textContent=icons[role]||'⭐'; svg.appendChild(icon);
-  const t=document.createElementNS(NS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle');
-  t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
+  const icon=document.createElementNS(NS,'text'); icon.setAttribute('x','100'); icon.setAttribute('y','105'); icon.setAttribute('text-anchor','middle'); icon.setAttribute('dominant-baseline','central'); icon.setAttribute('font-size','48'); icon.setAttribute('font-weight','700'); icon.setAttribute('fill','#612e0a'); icon.textContent=icons[role]||'⭐'; svg.appendChild(icon);
+  const t=document.createElementNS(NS,'text'); t.setAttribute('x','100'); t.setAttribute('y','188'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','12'); t.setAttribute('fill','#5a4635'); t.textContent=role; svg.appendChild(t);
   badgeWrap.appendChild(svg);
 }
 
-/* костёр — полноэкранно (без правок логики) */
+/* ——— костёр (полноэкранный) ——— */
 let running=false, SP=[], RAF=null, lastT=0, W=0, H=0, fadeTimer=null;
-const fireAudio=document.getElementById('fireAudio');
+const fireCtx = fctx; const sparksCtx = sctx;
 function resizeFX(){ W=innerWidth; H=innerHeight; [fireCanvas,sparksCanvas].forEach(c=>{ c.width=W; c.height=H; c.style.width='100%'; c.style.height='100%'; }); }
 window.addEventListener('resize', resizeFX);
 function drawFire(ctx,t){
@@ -328,31 +309,37 @@ function drawFire(ctx,t){
     ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*15}%,${0.05+Math.random()*0.09})`;
     ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
   }
-  const g=fctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.min(W,H)*0.7);
-  g.addColorStop(0,'rgba(255,170,70,0.25)'); g.addColorStop(1,'rgba(255,170,70,0)'); fctx.fillStyle=g; fctx.fillRect(0,0,W,H);
+  const g=ctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.min(W,H)*0.7);
+  g.addColorStop(0,'rgba(255,170,70,0.25)'); g.addColorStop(1,'rgba(255,170,70,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
 }
 function makeSpark(){ const sx=W*(0.46+Math.random()*0.08), sy=H+Math.random()*30, v0=90+Math.random()*160, vx=(Math.random()*2-1)*22, life=1+Math.random()*1.6, size=1+Math.random()*2.8, hue=28+Math.random()*14, phase=Math.random()*Math.PI*2; return {x:sx,y:sy,vx,vy:-v0,life,maxLife:life,size,hue,phase}; }
 function loop(t){
   if(!running) return;
   const dt=Math.min(0.05,(t-(lastT||t))/1000); lastT=t;
-  drawFire(fctx,t);
-  sctx.clearRect(0,0,W,H); sctx.globalCompositeOperation='lighter';
+  drawFire(fireCtx,t);
+  sparksCtx.clearRect(0,0,W,H); sparksCtx.globalCompositeOperation='lighter';
   for(let i=0;i<SP.length;i++){
     const p=SP[i], wind=Math.sin(t*0.001+p.phase)*24, jitter=Math.sin(t*0.006+p.phase)*4;
     p.vx+=(wind*0.4)*dt; p.x+=(p.vx+jitter)*dt; p.y+=p.vy*dt; p.life-=dt;
     const k=Math.max(0,p.life/p.maxLife), size=p.size*(0.6+0.4*k), alpha=Math.min(1,0.18+k*0.9);
-    const trail=sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
+    const trail=sparksCtx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
     trail.addColorStop(0,`hsla(${p.hue+5},90%,55%,${alpha*0.35})`); trail.addColorStop(1,'hsla(25,90%,50%,0)');
-    sctx.fillStyle=trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sctx.fill();
-    const grad=sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
+    sparksCtx.fillStyle=trail; sparksCtx.beginPath(); sparksCtx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sparksCtx.fill();
+    const grad=sparksCtx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
     grad.addColorStop(0,`hsla(50,100%,85%,${alpha})`); grad.addColorStop(0.35,`hsla(${p.hue},95%,60%,${alpha*0.9})`);
-    grad.addColorStop(1,`hsla(${p.hue+10},90%,40%,0)`); sctx.fillStyle=grad; sctx.beginPath(); sctx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sctx.fill();
+    grad.addColorStop(1,`hsla(${p.hue+10},90%,40%,0)`); sparksCtx.fillStyle=grad; sparksCtx.beginPath(); sparksCtx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sparksCtx.fill();
     if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) SP[i]=makeSpark();
   }
-  sctx.globalCompositeOperation='source-over';
+  sparksCtx.globalCompositeOperation='source-over';
   RAF=requestAnimationFrame(loop);
 }
 function startFX(){ if(running) return; running=true; resizeFX(); SP=Array.from({length:180},makeSpark); fireCanvas.style.display='block'; sparksCanvas.style.display='block'; lastT=0; RAF=requestAnimationFrame(loop); }
 function stopFX(){ running=false; if(RAF) cancelAnimationFrame(RAF); fireCanvas.style.display='none'; sparksCanvas.style.display='none'; }
-function smoothVolumeTo(target,ms,cb){ if(fadeTimer) clearInterval(fadeTimer); const start=fireAudio.volume, t0=performance.now();
-  fadeTimer=set
+function smoothVolumeTo(target,ms,cb){
+  if(fadeTimer) clearInterval(fadeTimer);
+  const start=fireAudio.volume, t0=performance.now();
+  fadeTimer=setInterval(()=>{ const k=Math.min(1,(performance.now()-t0)/ms);
+    fireAudio.volume=start+(target-start)*k; if(k>=1){clearInterval(fadeTimer); fadeTimer=null; cb&&cb();}},16);
+}
+campSwitchEl.addEventListener('change',(e)=>{
+  if(e.target.checked){ document.body.classList.add('camp-night'); startFX(); fireAudio.volume=0; fireAudio.loop=true; fireAudio.play().catch(()=>{})
