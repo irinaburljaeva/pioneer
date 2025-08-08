@@ -16,7 +16,7 @@
   .page{max-width:860px;margin:24px auto;padding:20px;background:var(--paper);border:5px double var(--accent);border-radius:18px;box-shadow:0 30px 60px rgba(0,0,0,.15);position:relative;perspective:1200px}
   /* Intro overlay */
   .intro{display:flex;justify-content:center;align-items:center;cursor:pointer;position:relative;z-index:10}
-  .intro img{max-width:100%;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.2);transition:transform .25s}
+  .intro img{$1; pointer-events:auto}
   .intro img:hover{transform:scale(1.02)}
   #quizSection{display:none}
   h1{margin:0 0 8px;text-align:center;color:var(--accent)}
@@ -48,8 +48,8 @@
 </head>
 <body>
 <div class="page">
-    <div class="intro" id="intro" role="button" tabindex="0" onclick="window.startQuiz && window.startQuiz()">
-    <img src="intro.png" alt="Нажмите, чтобы начать тест" onclick="window.startQuiz && window.startQuiz()" />
+    <div class="intro" id="intro">
+    <img id="introImg" src="intro.png" alt="Нажмите, чтобы начать тест" />
   </div>  <div id="quizSection" style="position:relative;">
     <h1>Кто ты в летнем лагере?</h1>
     <div class="camp-toggle" style="display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px">
@@ -285,17 +285,19 @@ function bugle(){ const ctx=ac(); const now=ctx.currentTime; [523.25,659.25,783.
 // ===== Кнопки =====
 document.getElementById('replay').addEventListener('click',()=>location.reload());
 
-// ===== Старт по клику/клавише на интро =====
+// ===== Старт по клику именно на картинку intro.png =====
 function startQuiz(){
   try{
-    intro.style.display='none';
-    quizSection.style.display='block';
+    document.getElementById('intro').style.display='none';
+    document.getElementById('quizSection').style.display='block';
     renderQ();
   }catch(err){ console.error('Start quiz error:', err); }
 }
-window.startQuiz = startQuiz; // запасной план для inline-обработчика на IMG
 
-document.addEventListener('DOMContentLoaded', function(){
-  if(intro){
-    intro.addEventListener('click', startQuiz);
-    intro.addEventListener('keydown', (e)=>
+document.addEventListener('DOMContentLoaded', ()=>{
+  const img = document.getElementById('introImg');
+  if(img){
+    img.addEventListener('click', startQuiz);
+    img.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); startQuiz(); } });
+    img.setAttribute('tabindex','0'); // доступность с клавиатуры
+    img.style.cu
