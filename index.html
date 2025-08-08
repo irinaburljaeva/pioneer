@@ -13,17 +13,18 @@ body{
   background:radial-gradient(1200px 600px at top left,#fff6d8 0%,#fffaf0 35%,#fff 60%) fixed
 }
 body.night::before{content:"";position:fixed;inset:0;background:var(--night);z-index:0;pointer-events:none}
-/* fx canvas */
+
+/* FX */
 .fx{position:fixed;inset:0;pointer-events:none;z-index:1;display:none}
 
-/* card + header */
+/* Карточка */
 .page{max-width:900px;margin:20px auto;padding:20px;background:var(--paper);border-radius:18px;
   box-shadow:0 30px 60px rgba(0,0,0,.14),inset 0 0 0 2px #e7d9b6,0 0 0 6px rgba(255,255,255,.7),inset 0 0 0 8px #f4ecd1;position:relative;z-index:2}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
 h1{margin:0;color:var(--accent);font-size:24px}
 .flames{display:flex;gap:6px}.flame{opacity:.25;transition:.2s}.flame.on{opacity:1;transform:translateY(-2px)}
 
-/* toggle */
+/* Тумблер */
 .toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
 .switch{position:relative;width:50px;height:28px;display:inline-block}
 .switch input{opacity:0;width:0;height:0}
@@ -34,20 +35,20 @@ h1{margin:0;color:var(--accent);font-size:24px}
 .card{position:relative;background:linear-gradient(#fffef7,#fffaf0);border:1px solid #e8e0c7;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
 .stage{position:relative;min-height:420px}
 
-/* интро */
+/* Интро */
 .intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0;background:transparent;border:0;cursor:pointer;z-index:9}
 .intro img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);pointer-events:none;user-select:none}
 .intro.hide{opacity:0;pointer-events:none;transition:.25s}
 
-/* слайды */
+/* Слайды */
 .slide{position:absolute;inset:0;opacity:0;transform:translateX(40px) rotateY(-4deg);transition:.45s}
 .slide.active{opacity:1;transform:none}.slide.out{opacity:0;transform:translateX(-40px) rotateY(6deg)}
 #question{font-size:22px;margin:6px 0 12px}
 
-/* ответы */
+/* Ответы */
 .answers{
-  max-height:72vh;overflow:auto;padding-right:4px;
-  padding-bottom:calc(var(--navPad) + env(safe-area-inset-bottom));
+  max-height:72vh;overflow:auto;
+  padding:0 10px calc(var(--navPad) + env(safe-area-inset-bottom)) 10px; /* добавил слева/справа по 10px */
   scroll-padding-bottom:calc(var(--navPad) + 24px);
 }
 .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
@@ -58,15 +59,12 @@ h1{margin:0;color:var(--accent);font-size:24px}
   scroll-margin-bottom:calc(var(--navPad) + 32px)
 }
 .answer:hover{background:#fff2c7}
-/* аккуратное выделение без наложения на штрихи */
-.answer.sel{position:relative;background:#fff7ea;border-color:var(--blue)}
-.answer.sel::after{
-  content:"";position:absolute;inset:-4px;border-radius:16px;border:3px solid var(--accent);
-  box-shadow:0 6px 18px rgba(178,34,34,.25),0 0 0 3px rgba(255,255,255,.9) inset;pointer-events:none
-}
+/* аккуратное выделение: внешний кант, не обрезается и не наезжает */
+.answer.sel{background:#fff7ea;outline:3px solid var(--accent);outline-offset:4px}
+
 .answers .spacer{height:calc(var(--navPad) + 80px)}
 
-/* навигация */
+/* Навигация */
 .nav{position:sticky;bottom:0;z-index:3;background:linear-gradient(180deg,transparent,#fffaf0 40%);
   padding:10px 6px calc(10px + env(safe-area-inset-bottom));border-bottom-left-radius:14px;border-bottom-right-radius:14px;display:flex;justify-content:flex-end}
 #next{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 20px;font-weight:700;box-shadow:0 6px 18px rgba(178,34,34,.25)}
@@ -81,7 +79,7 @@ body.prestart .top,body.prestart .toggle,body.prestart .nav{display:none!importa
 </style>
 
 <script>
-/* фолбэк старта по интро */
+/* старт по интро — фолбэк */
 window.__startWanted=false;
 function startQuiz(){
   if(!document.body.classList.contains('prestart')) return;
@@ -136,7 +134,7 @@ function startQuiz(){
 <audio id="fireAudio" src="fire.mp3" loop></audio>
 
 <script>
-/* ===== НАСТРОЙКА ВИДА БЕЙДЖА ===== */
+/* ===== НАСТРОЙКА БЕЙДЖА ===== */
 const BADGE_STYLE = 'patch'; // 'patch' | 'rosette' | 'pin'
 
 /* ===== ДАННЫЕ ===== */
@@ -259,31 +257,21 @@ function showResult(){
   flames.forEach(f=>f.classList.add('on'));
   quiz.style.display='none'; result.style.display='block';
   const winner=Object.keys(scores).reduce((a,b)=>(scores[a]||0)>(scores[b]||0)?a:b);
-  roleEl.textContent='Вы — ' + winner;   // ← как просили
+  roleEl.textContent='Вы — ' + winner;
   descEl.textContent=ROLES[winner];
   renderBadge(winner);
 }
 
-/* бейдж (3 стиля) */
+/* Бейдж (3 стиля) */
 function renderBadge(role){
   const ICON={"Королева красоты":"👑","Любительница компота":"🥤","Самая активная участница":"⭐","Тайная проказница":"😼","Игрок в карты на карамельки":"🃏","Спортсменка":"🏅"}[role]||"⭐";
   let svg='';
   if(BADGE_STYLE==='patch'){ svg=`
 <svg viewBox="0 0 200 200" width="100%" height="100%">
   <defs>
-    <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".22"/>
-    </filter>
-    <filter id="grain" x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
-      <feColorMatrix type="saturate" values="0"/>
-      <feComponentTransfer><feFuncA type="linear" slope="0.05"/></feComponentTransfer>
-    </filter>
-    <radialGradient id="cloth" cx="50%" cy="45%" r="70%">
-      <stop offset="0%"  stop-color="#fff6e1"/>
-      <stop offset="70%" stop-color="#f3dcc0"/>
-      <stop offset="100%" stop-color="#e7cda9"/>
-    </radialGradient>
+    <filter id="ds" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".22"/></filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.05"/></feComponentTransfer></filter>
+    <radialGradient id="cloth" cx="50%" cy="45%" r="70%"><stop offset="0%" stop-color="#fff6e1"/><stop offset="70%" stop-color="#f3dcc0"/><stop offset="100%" stop-color="#e7cda9"/></radialGradient>
   </defs>
   <circle cx="100" cy="100" r="78" fill="url(#cloth)" filter="url(#ds)"/>
   <circle cx="100" cy="100" r="74" fill="none" stroke="#b22222" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 9"/>
@@ -293,12 +281,8 @@ function renderBadge(role){
 </svg>`; }
   else if(BADGE_STYLE==='rosette'){ svg=`
 <svg viewBox="0 0 200 220" width="100%" height="100%">
-  <defs>
-    <radialGradient id="rosC" cx="50%" cy="45%" r="70%">
-      <stop offset="0%" stop-color="#ffe6ea"/><stop offset="60%" stop-color="#ff90a5"/><stop offset="100%" stop-color="#ff5a78"/>
-    </radialGradient>
-    <filter id="rosDS"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".22"/></filter>
-  </defs>
+  <defs><radialGradient id="rosC" cx="50%" cy="45%" r="70%"><stop offset="0%" stop-color="#ffe6ea"/><stop offset="60%" stop-color="#ff90a5"/><stop offset="100%" stop-color="#ff5a78"/></radialGradient>
+  <filter id="rosDS"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".22"/></filter></defs>
   <path d="M80 200 L70 220 L100 206 L130 220 L120 200 Z" fill="#b22222" opacity=".95"/>
   <circle cx="100" cy="110" r="78" fill="url(#rosC)" filter="url(#rosDS)" stroke="#fff" stroke-width="6"/>
   <text x="100" y="112" text-anchor="middle" dominant-baseline="middle" font-size="66" font-weight="700">${ICON}</text>
@@ -306,12 +290,8 @@ function renderBadge(role){
   else { svg=`
 <svg viewBox="0 0 200 200" width="100%" height="100%">
   <defs>
-    <radialGradient id="enamel" cx="50%" cy="40%" r="70%">
-      <stop offset="0%" stop-color="#ffb0bd"/><stop offset="60%" stop-color="#ff6b85"/><stop offset="100%" stop-color="#d92f50"/>
-    </radialGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ffe39a"/><stop offset="50%" stop-color="#d9a63a"/><stop offset="100%" stop-color="#8d5e12"/>
-    </linearGradient>
+    <radialGradient id="enamel" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#ffb0bd"/><stop offset="60%" stop-color="#ff6b85"/><stop offset="100%" stop-color="#d92f50"/></radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffe39a"/><stop offset="50%" stop-color="#d9a63a"/><stop offset="100%" stop-color="#8d5e12"/></linearGradient>
     <filter id="pinDS"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".25"/></filter>
   </defs>
   <circle cx="100" cy="100" r="80" fill="url(#gold)" filter="url(#pinDS)"/>
@@ -321,17 +301,17 @@ function renderBadge(role){
   badge.innerHTML = svg;
 }
 
-/* ===== КОСТЁР: узкая полоса + мягкое свечение + мелкие искры ===== */
+/* ===== КОСТЁР: узкая полоса, но искр БОЛЬШЕ и ЯРЧЕ ===== */
 const cv=document.getElementById('fx'), ctx=cv.getContext('2d'), audio=document.getElementById('fireAudio');
 let run=false, W=0,H=0,SP=[];
-const FIRE_SHIFT = -40;  // выше
-const STRIPE     = 0.92; // показываем нижние ~8%
-const SPARKS     = 150;
+const FIRE_SHIFT = -40;  // чуть выше
+const STRIPE     = 0.94; // нижние ~6% экрана
+const SPARKS     = 280;  // плотнее искры
 
 function size(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;cv.style.display=run?'block':'none'}
 function makeSpark(){
-  const baseY=H+FIRE_SHIFT, sx=W*(0.12+Math.random()*0.76), sy=baseY+Math.random()*18;
-  const v0=140+Math.random()*210, vx=(Math.random()*2-1)*40, life=0.9+Math.random()*1.1, s=0.6+Math.random()*1.4;
+  const baseY=H+FIRE_SHIFT, sx=W*(0.10+Math.random()*0.80), sy=baseY+Math.random()*16;
+  const v0=160+Math.random()*230, vx=(Math.random()*2-1)*42, life=1.0+Math.random()*1.2, s=1.0+Math.random()*1.4;
   return {x:sx,y:sy,vx,vy:-v0,life,maxLife:life,s,phi:Math.random()*6.28};
 }
 function drawFire(ts){
@@ -340,14 +320,17 @@ function drawFire(ts){
 
   ctx.save(); ctx.beginPath(); ctx.rect(0,stripeTop,W,H-stripeTop); ctx.clip();
 
-  const glow=ctx.createRadialGradient(W*.5,baseY,8, W*.5,baseY, Math.max(W,H)*0.30);
-  glow.addColorStop(0,'rgba(255,195,120,0.18)'); glow.addColorStop(1,'rgba(255,195,120,0)');
+  const glow=ctx.createRadialGradient(W*.5,baseY,10, W*.5,baseY, Math.max(W,H)*0.28);
+  glow.addColorStop(0,'rgba(255,200,130,0.28)');
+  glow.addColorStop(1,'rgba(255,200,130,0)');
   ctx.fillStyle=glow; ctx.fillRect(0,stripeTop,W,H);
 
-  for(let i=0;i<10;i++){
-    const cx=W*0.5 + Math.sin(ts*0.002+i)*W*0.06, cy=baseY-14-Math.random()*20, r=W*(0.018+Math.random()*0.028);
+  for(let i=0;i<12;i++){
+    const cx=W*0.5 + Math.sin(ts*0.002+i)*W*0.06, cy=baseY-14-Math.random()*22, r=W*(0.016+Math.random()*0.028);
     const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
-    g.addColorStop(0,'rgba(255,235,190,0.35)'); g.addColorStop(0.55,'rgba(255,170,70,0.22)'); g.addColorStop(1,'rgba(255,170,70,0)');
+    g.addColorStop(0,'rgba(255,235,190,0.38)');
+    g.addColorStop(0.55,'rgba(255,170,70,0.25)');
+    g.addColorStop(1,'rgba(255,170,70,0)');
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
   }
   ctx.restore();
@@ -359,13 +342,13 @@ function loop(ts){
   for(let i=0;i<SPARKS;i++){
     if(!SP[i]) SP[i]=makeSpark();
     const p=SP[i], dt=0.016;
-    p.vx += Math.sin(ts*0.001+p.phi)*2*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
-    const k=Math.max(0,p.life/p.maxLife), a=Math.min(1,0.18+0.8*k), sz=p.s*(0.7+0.4*k);
-    const grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*3);
-    grad.addColorStop(0,`hsla(50,100%,85%,${a})`);
-    grad.addColorStop(.45,`hsla(35,95%,55%,${a*.9})`);
+    p.vx += Math.sin(ts*0.001+p.phi)*2.4*dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt;
+    const k=Math.max(0,p.life/p.maxLife), a=Math.min(1,0.22+0.85*k), sz=p.s*(0.8+0.45*k);
+    const grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*3.2);
+    grad.addColorStop(0,`hsla(50,100%,88%,${a})`);
+    grad.addColorStop(.45,`hsla(35,95%,58%,${a*.95})`);
     grad.addColorStop(1,'hsla(30,90%,40%,0)');
-    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(p.x,p.y,sz*1.8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(p.x,p.y,sz*1.9,0,Math.PI*2); ctx.fill();
     if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) SP[i]=makeSpark();
   }
   ctx.globalCompositeOperation='source-over';
@@ -384,4 +367,3 @@ setTimeout(()=>{ if(window.__startWanted && !stage.querySelector('.grid')) rende
 </script>
 </body>
 </html>
-  
