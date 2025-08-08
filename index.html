@@ -7,7 +7,7 @@
 <style>
   :root{
     --ink:#2e2623; --accent:#b22222; --paper:#fff8e6; --blue:#1f4a7f;
-    --night-dim: rgba(10,12,18,.60); /* затемнение стало сильнее */
+    --night-dim: rgba(10,12,18,.65);
   }
   html,body{height:100%}
   body{
@@ -22,7 +22,7 @@
     overflow:hidden;
   }
 
-  /* Панель заголовка и прогресс-«огоньки» */
+  /* Верхняя панель */
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
   h1{margin:0;color:var(--accent);font-size:24px}
   .flames{display:flex;gap:6px}
@@ -34,37 +34,31 @@
   .switch{position:relative;display:inline-block;width:50px;height:28px}
   .switch input{opacity:0;width:0;height:0}
   .slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s}
-  .slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
   .switch input:checked + .slider{background:#f59e0b}
   .switch input:checked + .slider:before{transform:translateX(22px)}
 
-  /* Ночной режим / затемнение / теплый свет */
+  /* Ночной режим */
   .night-on{ position:relative; }
   .night-on::after{
-    content:""; position:absolute; inset:-10%; z-index:2; pointer-events:none;
+    content:""; position:absolute; inset:-10%; z-index:1; pointer-events:none;
     background: var(--night-dim);
   }
-  .camp-glow{ position:absolute; inset:-10%; z-index:1; pointer-events:none;
-    background: radial-gradient(65% 45% at 50% 110%, rgba(255,160,64,.28) 0%, rgba(255,120,40,.18) 35%, rgba(255,90,20,.08) 55%, rgba(0,0,0,0) 70%);
-    animation: glow 2.8s ease-in-out infinite alternate;
-    display:none;
-  }
-  @keyframes glow{ from{filter:brightness(1)} to{filter:brightness(1.08)} }
 
-  /* Канвасы эффектов */
-  .sparks, .flameLayer{
-    position:absolute; inset:0; pointer-events:none; z-index:3; display:none;
+  /* Слои огня (всегда без кликов, ниже карточек) */
+  .sparks{
+    position:absolute; inset:0;
+    pointer-events:none !important; z-index:0; display:none;
   }
-  .flameLayer{ z-index:4; mix-blend-mode:screen; }
 
-  /* Карточка и сцена с перелистыванием */
+  /* Карточка и сцена */
   .card{
-    position:relative; z-index:5;
+    position:relative; z-index:2;
     background:linear-gradient(#fffef7,#fffaf0);
     border:2px solid #e7d9b6; border-radius:16px; padding:18px 18px 22px;
     box-shadow:0 10px 24px rgba(0,0,0,.08);
   }
-  .stage{ position:relative; min-height:290px; }
+  .stage{ position:relative; min-height:300px; }
   .slide{
     position:absolute; inset:0; opacity:0; transform:translateX(45px) rotateY(-4deg);
     transition:transform .5s cubic-bezier(.2,.7,.2,1), opacity .5s;
@@ -75,7 +69,7 @@
   .slide.in-right{ opacity:0; transform:translateX(45px) rotateY(-6deg); }
   .slide.in-right.active{ opacity:1; transform:translateX(0) rotateY(0); }
 
-  /* Вопрос и ответы */
+  /* Вопрос/ответы */
   #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
   #question{font-size:22px;margin:6px 0 12px}
   .answers-grid{
@@ -92,25 +86,19 @@
   .answer:active{ transform: translateY(1px) }
 
   /* Результат */
-  #result{display:none;text-align:center; position:relative; z-index:5}
+  #result{display:none;text-align:center; position:relative; z-index:2}
   .badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative}
   .cta{display:inline-block;margin-top:16px;padding:12px 24px;background:#b22222;color:#fff;border-radius:24px;text-decoration:none;font-weight:700}
-
-  /* Низ страницы */
-  .footerpad{height:6px}
 </style>
 </head>
 <body>
 <div class="page" id="page">
-  <!-- Слои атмосферы -->
-  <div id="campGlow" class="camp-glow"></div>
-  <canvas id="flameLayer" class="flameLayer"></canvas>
+  <!-- слой искр ниже карточек -->
   <canvas id="sparks" class="sparks"></canvas>
 
   <div class="topbar">
     <h1>Кто ты в летнем лагере?</h1>
     <div class="flames" id="flames">
-      <!-- 8 «огоньков-прогресса» -->
       <span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span>
       <span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span>
     </div>
@@ -125,7 +113,7 @@
   </div>
 
   <section id="quiz" class="card" aria-live="polite">
-    <div class="stage" id="stage"><!-- сюда рендерятся слайды --></div>
+    <div class="stage" id="stage"></div>
   </section>
 
   <section id="result" class="card" style="display:none;">
@@ -133,7 +121,7 @@
     <h2 id="role" style="margin:6px 0 6px; color:var(--accent)"></h2>
     <p id="desc" style="max-width:650px; margin:0 auto 14px; line-height:1.5"></p>
 
-    <!-- Прогрев интенсива -->
+    <!-- Прогрев -->
     <div id="campPromo" style="margin:12px auto 8px; max-width:680px; text-align:center;">
       <p style="margin:0 0 8px;">Готовы прожить <strong>ваше лето мечты</strong> в духе пионерлагеря — прямо из дома?</p>
       <ul style="text-align:left; display:inline-block; margin:0; padding-left:18px; line-height:1.5">
@@ -150,7 +138,6 @@
       <button id="replay" class="answer" style="border-style:solid; text-align:center">Пройти ещё раз</button>
     </div>
   </section>
-  <div class="footerpad"></div>
 </div>
 
 <audio id="fireAudio" src="fire.mp3" loop></audio>
@@ -167,7 +154,7 @@ const ROLES = {
   "Секретная хулиганка":"С виду пай-девочка, но только до отбоя. Может подложить зубную пасту в тапок или намылить ручку соседнего отряда."
 };
 
-/* ===== ВОПРОСЫ (8) — расширенные варианты ===== */
+/* ===== ВОПРОСЫ (8) — расширено ===== */
 const QUESTIONS = [
   {q:"Что для вас самое важное в лагере?",a:[
     {t:"Выглядеть на все 100",r:"Звезда линейки"},
@@ -258,10 +245,7 @@ const QUESTIONS = [
 const page = document.getElementById('page');
 const campSwitchEl = document.getElementById('campfireSwitch');
 const sparksCanvas = document.getElementById('sparks');
-const flameLayer = document.getElementById('flameLayer');
-const campGlow = document.getElementById('campGlow');
 const spCtx = sparksCanvas.getContext('2d');
-const flCtx = flameLayer.getContext('2d');
 const stage = document.getElementById('stage');
 const flamesBar = document.getElementById('flames').querySelectorAll('.flame');
 
@@ -285,7 +269,7 @@ function renderQuestion() {
   // прогресс-огоньки
   flamesBar.forEach((f,i)=> f.classList.toggle('on', i<idx));
 
-  // отправляем текущий слайд влево
+  // старый слайд уезжает
   const current = stage.querySelector('.slide.active');
   if (current) {
     current.classList.remove('active');
@@ -305,13 +289,11 @@ function renderQuestion() {
   `;
   stage.appendChild(slide);
 
-  // запуск входа
   requestAnimationFrame(()=>{
     slide.classList.remove('in-right');
     slide.classList.add('active');
   });
 
-  // клики по ответам
   slide.querySelector('#answers').addEventListener('click', (e)=>{
     const btn = e.target.closest('.answer');
     if(!btn) return;
@@ -363,18 +345,18 @@ function iconFor(role){
   }
 }
 
-/* ===== АТМОСФЕРА КОСТРА ===== */
+/* ===== АТМОСФЕРА КОСТРА (искра + звук) ===== */
 let sparksRunning=false, SP=[], spRAF=null, lastTime=0, windT=0, fadeTimer=null;
 
-function resizeLayers(){
+function resizeSparks(){
   const r = page.getBoundingClientRect();
-  [sparksCanvas, flameLayer].forEach(c=>{ c.width = r.width; c.height = r.height; });
+  sparksCanvas.width = r.width; sparksCanvas.height = r.height;
 }
-addEventListener('resize', resizeLayers);
+addEventListener('resize', resizeSparks);
 
 function makeSpark(){
   const w = sparksCanvas.width, h = sparksCanvas.height;
-  const sx = w * (0.40 + Math.random()*0.20); // источник по центру
+  const sx = w * (0.40 + Math.random()*0.20); // центр 40–60%
   const sy = h + Math.random()*30;
   const v0 = 80 + Math.random()*160;
   const vx = (Math.random()*2 - 1) * 24;
@@ -384,7 +366,7 @@ function makeSpark(){
   return { x:sx, y:sy, vx, vy:-v0, size, life, maxLife:life, phase, hue: 28 + Math.random()*16 };
 }
 function startSparks(){
-  if(sparksRunning) return; sparksRunning=true; resizeLayers();
+  if(sparksRunning) return; sparksRunning=true; resizeSparks();
   SP = Array.from({length:140}, makeSpark); lastTime = performance.now();
   loopSparks();
 }
@@ -394,17 +376,6 @@ function loopSparks(){
   const now = performance.now(); let dt = (now - lastTime)/1000; if(dt>0.05) dt=0.05; lastTime=now; windT+=dt;
   const w = sparksCanvas.width, h = sparksCanvas.height;
 
-  // Псевдо-пламя: мягкие шумовые «языки» внизу
-  flCtx.clearRect(0,0,w,h);
-  for(let i=0;i<18;i++){
-    const cx = w*0.35 + Math.random()*w*0.30;
-    const cy = h - 20 - Math.random()*30;
-    const rad = 35 + Math.random()*85;
-    flCtx.fillStyle = `hsla(${30+Math.random()*14}, 95%, ${55+Math.random()*15}%, ${0.06+Math.random()*0.08})`;
-    flCtx.beginPath(); flCtx.arc(cx, cy, rad, 0, Math.PI*2); flCtx.fill();
-  }
-
-  // Искры
   spCtx.clearRect(0,0,w,h);
   spCtx.globalCompositeOperation='lighter';
   for(let i=0;i<SP.length;i++){
@@ -425,4 +396,48 @@ function loopSparks(){
     spCtx.fillStyle = grad; spCtx.beginPath(); spCtx.arc(p.x,p.y,size*2.2,0,Math.PI*2); spCtx.fill();
 
     if (p.life<=0 || p.y<-20 || p.x<-20 || p.x>w+20){
-      if(Math.random()<0.1){ const big=makeSpark(); big.size*=1.6; big.vy*=1.15; SP[i]
+      if(Math.random()<0.1){ const big=makeSpark(); big.size*=1.6; big.vy*=1.15; SP[i]=big; } else SP[i]=makeSpark();
+    }
+  }
+  spCtx.globalCompositeOperation='source-over';
+  spRAF = requestAnimationFrame(loopSparks);
+}
+
+/* Аудио */
+function smoothVolumeTo(target, ms, cb){
+  if(!fireAudio) return; if(fadeTimer) clearInterval(fadeTimer);
+  const start=fireAudio.volume; const t0=performance.now();
+  fadeTimer=setInterval(()=>{
+    const k=Math.min(1,(performance.now()-t0)/ms);
+    fireAudio.volume = start + (target-start)*k;
+    if(k>=1){ clearInterval(fadeTimer); fadeTimer=null; if(cb) cb(); }
+  }, 16);
+}
+
+/* Тумблер */
+campSwitchEl.addEventListener('change', (e)=>{
+  if(e.target.checked){
+    page.classList.add('night-on');
+    sparksCanvas.style.display='block';
+    startSparks();
+    fireAudio.volume = 0.0;
+    fireAudio.loop = true;
+    fireAudio.play().catch(()=>{});
+    smoothVolumeTo(0.5, 300);
+  } else {
+    page.classList.remove('night-on');
+    sparksCanvas.style.display='none';
+    stopSparks();
+    smoothVolumeTo(0.0, 200, ()=>{ try{ fireAudio.pause(); fireAudio.currentTime=0; }catch(_){} });
+  }
+});
+
+/* ===== GO ===== */
+function startQuiz(){ idx=0; scores=Object.create(null); renderQuestion(); }
+startQuiz();
+
+/* Пройти ещё раз */
+replayBtn.addEventListener('click', ()=>location.reload());
+</script>
+</body>
+  </html>
