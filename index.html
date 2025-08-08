@@ -2,7 +2,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Кто ты в летнем лагере? — ШАГАЙ ДОМА</title>
 <style>
-:root{--ink:#2e2623;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f;--night:rgba(10,12,18,.5);--navPad:140px}
+:root{--ink:#2e2623;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f;--night:rgba(10,12,18,.5);--navPad:160px}
 html,body{height:100%}
 body{margin:0;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;background:radial-gradient(1200px 600px at top left,#fff6d8 0%,#fffaf0 35%,#fff 60%) fixed}
 body.night::before{content:"";position:fixed;inset:0;background:var(--night);z-index:0;pointer-events:none}
@@ -24,9 +24,9 @@ h1{margin:0;color:var(--accent);font-size:24px}
 .card{position:relative;background:linear-gradient(#fffef7,#fffaf0);border:1px solid #e8e0c7;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
 .stage{position:relative;min-height:340px}
 
-/* интро больше */
+/* интро — крупнее и с сохранением пропорций */
 .intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0;background:transparent;border:0;cursor:pointer;z-index:9}
-.intro img{width:100%;max-height:100%;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);pointer-events:none;user-select:none}
+.intro img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);pointer-events:none;user-select:none}
 .intro.hide{opacity:0;pointer-events:none;transition:.25s}
 
 .slide{position:absolute;inset:0;opacity:0;transform:translateX(40px) rotateY(-4deg);transition:.45s}
@@ -35,7 +35,7 @@ h1{margin:0;color:var(--accent);font-size:24px}
 #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
 #question{font-size:22px;margin:6px 0 12px}
 
-/* ответы: динамический отступ + spacer + scroll-padding */
+/* ответы: большой динамический отступ + spacer + scroll-padding */
 .answers{
   max-height:65vh;overflow:auto;padding-right:4px;
   padding-bottom:calc(var(--navPad) + env(safe-area-inset-bottom));
@@ -44,11 +44,11 @@ h1{margin:0;color:var(--accent);font-size:24px}
 .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;box-shadow:0 2px 0 rgba(0,0,0,.06);cursor:pointer}
 .answer:hover{background:#fff2c7}.answer.sel{outline:3px solid var(--accent)}
-.answers .spacer{height:calc(var(--navPad) + 40px)} /* гарантированно выше кнопки */
+.answers .spacer{height:calc(var(--navPad) + 64px)} /* гарантированно выше кнопки */
 
 .nav{position:sticky;bottom:0;z-index:3;background:linear-gradient(180deg,transparent,#fffaf0 40%);
   padding:10px 6px calc(10px + env(safe-area-inset-bottom));border-bottom-left-radius:14px;border-bottom-right-radius:14px;display:flex;justify-content:flex-end}
-#next{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:10px 18px;font-weight:700;box-shadow:0 6px 18px rgba(178,34,34,.25)}
+#next{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:12px 20px;font-weight:700;box-shadow:0 6px 18px rgba(178,34,34,.25)}
 #next:disabled{opacity:.6;box-shadow:none}
 
 #result{text-align:center;display:none}
@@ -58,8 +58,8 @@ h1{margin:0;color:var(--accent);font-size:24px}
 body.prestart .top,body.prestart .toggle,body.prestart .nav{display:none!important}
 </style>
 
-<!-- фолбэк старта -->
 <script>
+  /* фолбэк старта */
   window.__startWanted=false;
   function startQuiz(){
     if(!document.body.classList.contains('prestart')) return;
@@ -194,7 +194,7 @@ const nav=document.getElementById('nav');
 /* динамический отступ под кнопку */
 function setNavPad(){
   const h = nav ? Math.ceil(nav.getBoundingClientRect().height) : 64;
-  document.documentElement.style.setProperty('--navPad', (h + 96) + 'px'); // щедрый запас
+  document.documentElement.style.setProperty('--navPad', (h + 110) + 'px'); // ЩЕДРЫЙ запас для мобилок
 }
 setNavPad();
 new ResizeObserver(setNavPad).observe(nav);
@@ -215,11 +215,16 @@ function renderQuestion(){
      </div><div class="spacer"></div></div>`;
   stage.appendChild(el); requestAnimationFrame(()=>el.classList.add('active'));
   pick=null; nextBtn.disabled=true;
-  el.querySelector('.grid').addEventListener('click',e=>{
+
+  const grid=el.querySelector('.grid');
+  grid.addEventListener('click',e=>{
     const btn=e.target.closest('.answer'); if(!btn) return;
-    el.querySelectorAll('.answer').forEach(b=>b.classList.remove('sel'));
+    grid.querySelectorAll('.answer').forEach(b=>b.classList.remove('sel'));
     btn.classList.add('sel'); pick=btn.dataset.r; nextBtn.disabled=false;
+    // гарантируем видимость выбранного ответа
+    btn.scrollIntoView({block:'nearest',behavior:'smooth'});
   });
+
   setNavPad();
 }
 window.renderQuestion=renderQuestion;
@@ -254,37 +259,44 @@ function showResult(){
   </svg>`;
 }
 
-/* ===== КОСТЁР (поднят на -40px) ===== */
+/* ===== КОСТЁР: короткая полоса снизу ===== */
 const cv=document.getElementById('fx'), ctx=cv.getContext('2d'), audio=document.getElementById('fireAudio');
 let run=false, W=0,H=0,parts=[];
-const FIRE_SHIFT = -40; // ↑ поднять костёр
+const FIRE_SHIFT = -60; // чуть поднят вверх
 
 function size(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;cv.style.display=run?'block':'none'}
 function spark(){
   const baseY = H + FIRE_SHIFT;
-  const sx=W*(0.15+Math.random()*0.70), sy=baseY+Math.random()*30;
-  const v0=90+Math.random()*160, vx=(Math.random()*2-1)*60;
-  return {x:sx,y:sy,vx,vy:-v0,life:1+Math.random()*1.2,s:1+Math.random()*2.2};
+  const sx=W*(0.15+Math.random()*0.70), sy=baseY+Math.random()*20;
+  const v0=90+Math.random()*140, vx=(Math.random()*2-1)*50;
+  return {x:sx,y:sy,vx,vy:-v0,life:1+Math.random()*1.1,s:1+Math.random()*2};
 }
 function drawFire(ctx,t){
   ctx.clearRect(0,0,W,H);
+  // рисуем ПЛАМЯ только в нижних ~20% экрана
+  const stripeTop = H*0.8;
+  ctx.save(); ctx.beginPath(); ctx.rect(0,stripeTop,W,H-stripeTop); ctx.clip();
+
   const baseW=W, baseY=H + FIRE_SHIFT;
-  for(let k=0;k<36;k++){
-    const sway=Math.sin(t*0.0018+k)*baseW*0.18;
-    const jitter=(Math.random()-0.5)*baseW*0.12;
-    const cx=W*0.5+sway+jitter, cy=baseY-28-Math.random()*40, r=baseW*(0.04+Math.random()*0.09);
-    ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*15}%,${0.06+Math.random()*0.06})`;
+  for(let k=0;k<24;k++){
+    const sway=Math.sin(t*0.0018+k)*baseW*0.16;
+    const jitter=(Math.random()-0.5)*baseW*0.10;
+    const cx=W*0.5+sway+jitter, cy=baseY-28-Math.random()*36, r=baseW*(0.035+Math.random()*0.07);
+    ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*12}%,${0.05+Math.random()*0.05})`;
     ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
   }
-  const g=ctx.createRadialGradient(W*.5,baseY*.995,10, W*.5,baseY*.995, Math.max(W,H)*0.7);
-  g.addColorStop(0,'rgba(255,170,70,0.22)'); g.addColorStop(1,'rgba(255,170,70,0)');
+  const g=ctx.createRadialGradient(W*.5,baseY*.995,8, W*.5,baseY*.995, Math.max(W,H)*0.45);
+  g.addColorStop(0,'rgba(255,170,70,0.18)'); g.addColorStop(1,'rgba(255,170,70,0)');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.restore();
 }
 function loop(ts){
   if(!run) return;
   drawFire(ctx,ts);
+  // искры — поверх, без клипа
   ctx.globalCompositeOperation='lighter';
-  for(let j=0;j<parts.length;j++){
+  for(let j=0;j<120;j++){
+    if(!parts[j]) parts[j]=spark();
     const p=parts[j]; p.x+=p.vx*.016; p.y+=p.vy*.016; p.life-=.016;
     const a=Math.max(0,Math.min(1,p.life)), sz=p.s*(.8+.4*a);
     const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*3);
@@ -295,7 +307,7 @@ function loop(ts){
   ctx.globalCompositeOperation='source-over';
   requestAnimationFrame(loop);
 }
-function startFire(){if(run) return; run=true; size(); parts=Array.from({length:160},spark); requestAnimationFrame(loop);}
+function startFire(){if(run) return; run=true; size(); parts=Array(120); requestAnimationFrame(loop);}
 function stopFire(){run=false; size();}
 window.addEventListener('resize',size);
 document.getElementById('camp').addEventListener('change',e=>{
