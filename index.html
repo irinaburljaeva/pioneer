@@ -35,22 +35,31 @@
   #nextBtn{margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
   #nextBtn:disabled{opacity:.6;cursor:not-allowed}
   #result{display:none;text-align:center}
-  /* Тёплое свечение на финале */
-  .campfire::before{
-    content:""; position:absolute; inset:-10%; z-index:0; pointer-events:none;
-    background: radial-gradient(60% 40% at 50% 100%, rgba(255,160,64,.35) 0%, rgba(255,120,40,.22) 35%, rgba(255,90,20,.12) 55%, rgba(0,0,0,0) 70%);
-    animation: glow 2.4s ease-in-out infinite alternate;
-  }
-  @keyframes glow{ from{ filter: brightness(1); transform: translateY(0)} to{ filter: brightness(1.08); transform: translateY(-1.5%)} }
-  .sparks{ z-index:0 }.badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative} </style>
+  /* Переключатель */
+  .switch{position:relative;display:inline-block;width:46px;height:26px}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s}
+  .slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;top:3px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .switch input:checked + .slider{background:#f59e0b}
+  .switch input:checked + .slider:before{transform:translateX(20px)}/* Тёплое свечение и ночной режим */ .camp-on{position:relative} .camp-on::before{content:"";position:absolute;inset:-10%;pointer-events:none;z-index:0;background: radial-gradient(60% 40% at 50% 100%, rgba(255,160,64,.28) 0%, rgba(255,120,40,.18) 35%, rgba(255,90,20,.08) 55%, rgba(0,0,0,0) 70%);animation:glow 2.4s ease-in-out infinite alternate} @keyframes glow{from{filter:brightness(1)} to{filter:brightness(1.06)}} .night{filter:brightness(.95) saturate(1.02)} .sparks{z-index:0}
+
+.badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative} </style>
 
 </head>
 <body>
 <div class="page">
     <div class="intro" id="intro">
     <img src="intro.png" alt="Нажмите, чтобы начать тест" />
-  </div>  <div id="quizSection">
+  </div>  <div id="quizSection" style="position:relative;">
+    <canvas id="sparks" class="sparks" style="position:absolute; inset:0; pointer-events:none; display:none;"></canvas>
     <h1>Кто ты в летнем лагере?</h1>
+    <div class="camp-toggle" style="display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px">
+      <label class="switch">
+        <input id="campfireSwitch" type="checkbox"/>
+        <span class="slider"></span>
+      </label>
+      <span style="font-size:14px;color:#555">Атмосфера костра</span>
+    </div>
     <section id="quiz" class="card" aria-live="polite">
       <div id="qnum"></div>
       <div id="question"></div>
@@ -60,7 +69,7 @@
         <button id="nextBtn" disabled>Далее</button>
       </div>
     </section>
-    <section id="result" class="campfire" style="position:relative; overflow:hidden">
+    <section id="result"> class="campfire" style="position:relative; overflow:hidden">
       <canvas id="sparks" class="sparks" style="position:absolute; inset:0; pointer-events:none;"></canvas>
       <div class="badge-wrap" id="badgeWrap"></div>
       <h2 id="role" style="margin:6px 0 6px;color:var(--accent); position:relative; z-index:1"></h2>
@@ -218,4 +227,4 @@ function bugle(){ const ctx=ac(); const now=ctx.currentTime; [523.25,659.25,783.
 // Старт по клику на интро
 intro.addEventListener('click',()=>{ intro.style.display='none'; quizSection.style.display='block'; renderQ(); });
 </script></body>
-</html>
+        </html>
