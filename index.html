@@ -5,31 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Кто ты в летнем лагере? — ШАГАЙ ДОМА</title>
 <style>
-  :root{
-    --ink:#2e2623; --accent:#b22222; --paper:#fff8e6; --blue:#1f4a7f;
-    --night-dim: rgba(10,12,18,.45); /* умеренное затемнение */
-  }
+  :root{ --ink:#2e2623; --accent:#b22222; --paper:#fff8e6; --blue:#1f4a7f; --night-dim: rgba(10,12,18,.45); }
   html,body{height:100%}
-  body{
-    margin:0; color:var(--ink);
-    background: radial-gradient(1200px 600px at top left, #fff6d8 0%, #fffaf0 35%, #fff 60%) fixed;
-    font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;
-  }
-  .page{
-    max-width:900px; margin:20px auto; padding:20px; position:relative;
-    background:var(--paper); border:5px double var(--accent);
-    border-radius:18px; box-shadow:0 30px 60px rgba(0,0,0,.2);
-    overflow:hidden;
-  }
-
-  /* 🔥 Прогресс-огоньки */
+  body{ margin:0; color:var(--ink); background: radial-gradient(1200px 600px at top left, #fff6d8 0%, #fffaf0 35%, #fff 60%) fixed;
+        font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;}
+  .page{ max-width:900px; margin:20px auto; padding:20px; position:relative; background:var(--paper); border:5px double var(--accent);
+         border-radius:18px; box-shadow:0 30px 60px rgba(0,0,0,.2); overflow:hidden; }
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
   h1{margin:0;color:var(--accent);font-size:24px}
   .flames{display:flex;gap:6px;align-items:center}
   .flame{font-size:18px;opacity:.25;transition:opacity .25s, transform .25s}
   .flame.on{opacity:1; transform:translateY(-2px)}
-
-  /* Переключатель «Атмосфера костра» */
   .camp-toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
   .switch{position:relative;display:inline-block;width:50px;height:28px}
   .switch input{opacity:0;width:0;height:0}
@@ -37,75 +23,32 @@
   .slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
   .switch input:checked + .slider{background:#f59e0b}
   .switch input:checked + .slider:before{transform:translateX(22px)}
-
-  /* Ночной режим (затемнение ниже частиц) */
   .night-on{ position:relative; }
-  .night-on::after{
-    content:""; position:absolute; inset:-10%; z-index:0; pointer-events:none;
-    background: var(--night-dim);
-  }
-
-  /* Canvas-эффекты: поверх затемнения, под интерфейсом */
-  .fx-layer{
-    position:absolute; inset:0; z-index:1; pointer-events:none !important; display:none;
-  }
-
-  /* Карточка-обёртка */
-  .card{
-    position:relative; z-index:2;
-    background:linear-gradient(#fffef7,#fffaf0);
-    border:2px solid #e7d9b6; border-radius:16px; padding:18px;
-    box-shadow:0 10px 24px rgba(0,0,0,.08);
-  }
+  .night-on::after{ content:""; position:absolute; inset:-10%; z-index:0; pointer-events:none; background: var(--night-dim); }
+  .fx-layer{ position:absolute; inset:0; z-index:1; pointer-events:none !important; display:none; }
+  .card{ position:relative; z-index:2; background:linear-gradient(#fffef7,#fffaf0); border:2px solid #e7d9b6; border-radius:16px; padding:18px;
+         box-shadow:0 10px 24px rgba(0,0,0,.08); }
   .stage{ position:relative; min-height:320px; }
-
-  /* Перелистывание */
-  .slide{
-    position:absolute; inset:0; opacity:0; transform:translateX(45px) rotateY(-4deg);
-    transition:transform .5s cubic-bezier(.2,.7,.2,1), opacity .5s;
-    will-change: transform, opacity;
-  }
+  .slide{ position:absolute; inset:0; opacity:0; transform:translateX(45px) rotateY(-4deg);
+          transition:transform .5s cubic-bezier(.2,.7,.2,1), opacity .5s; will-change: transform, opacity; }
   .slide.active{ opacity:1; transform:translateX(0) rotateY(0); }
   .slide.out-left{ opacity:0; transform:translateX(-45px) rotateY(6deg); }
   .slide.in-right{ opacity:0; transform:translateX(45px) rotateY(-6deg); }
   .slide.in-right.active{ opacity:1; transform:translateX(0) rotateY(0); }
-
-  /* Вопрос/ответы */
   #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
   #question{font-size:22px;margin:6px 0 12px}
-  .answers-wrap{
-    max-height: calc(60vh - 80px); /* мобильная высота */
-    overflow:auto; padding-right:4px;
-  }
-  .answers-grid{
-    display:grid; gap:10px;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-  .answer{
-    display:block; width:100%; text-align:left; padding:12px 14px;
-    border:2px dashed var(--blue); border-radius:12px; background:#fdf8ea;
-    cursor:pointer; transition: background .15s, transform .05s, box-shadow .2s;
-    box-shadow:0 2px 0 rgba(0,0,0,.06);
-  }
+  .answers-wrap{ max-height: calc(60vh - 80px); overflow:auto; padding-right:4px; }
+  .answers-grid{ display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .answer{ display:block; width:100%; text-align:left; padding:12px 14px; border:2px dashed var(--blue); border-radius:12px; background:#fdf8ea;
+           cursor:pointer; transition: background .15s, transform .05s, box-shadow .2s; box-shadow:0 2px 0 rgba(0,0,0,.06); }
   .answer:hover{ background:#fff2c7; box-shadow:0 4px 12px rgba(0,0,0,.07) }
   .answer.selected{ outline:3px solid var(--accent) }
-
-  /* Sticky «Далее» */
-  .nav{
-    position: sticky; bottom: 0; z-index: 5;
-    display:flex; justify-content:flex-end; align-items:center; gap:12px;
-    padding:10px 6px calc(10px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, rgba(255,255,255,0), #fffaf0 40%);
-    border-bottom-left-radius:14px; border-bottom-right-radius:14px;
-  }
-  #nextBtn{
-    background:var(--accent); color:#fff; border:none; border-radius:12px;
-    padding:10px 18px; font-weight:700; cursor:pointer;
-    box-shadow:0 6px 18px rgba(178,34,34,.25);
-  }
+  .nav{ position: sticky; bottom: 0; z-index: 5; display:flex; justify-content:flex-end; align-items:center; gap:12px;
+        padding:10px 6px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(180deg, rgba(255,255,255,0), #fffaf0 40%);
+        border-bottom-left-radius:14px; border-bottom-right-radius:14px; }
+  #nextBtn{ background:var(--accent); color:#fff; border:none; border-radius:12px; padding:10px 18px; font-weight:700; cursor:pointer;
+            box-shadow:0 6px 18px rgba(178,34,34,.25); }
   #nextBtn:disabled{ opacity:.6; box-shadow:none; cursor:not-allowed }
-
-  /* Результат */
   #result{display:none;text-align:center; position:relative; z-index:2}
   .badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative}
   .cta{display:inline-block;margin-top:16px;padding:12px 24px;background:#b22222;color:#fff;border-radius:24px;text-decoration:none;font-weight:700}
@@ -113,7 +56,6 @@
 </head>
 <body>
 <div class="page" id="page">
-  <!-- Эффекты -->
   <canvas id="fireCanvas" class="fx-layer"></canvas>
   <canvas id="sparksCanvas" class="fx-layer"></canvas>
 
@@ -135,17 +77,13 @@
 
   <section id="quiz" class="card" aria-live="polite">
     <div class="stage" id="stage"></div>
-    <div class="nav">
-      <button id="nextBtn" disabled>Далее</button>
-    </div>
+    <div class="nav"><button id="nextBtn" disabled>Далее</button></div>
   </section>
 
   <section id="result" class="card" style="display:none;">
     <div class="badge-wrap" id="badgeWrap"></div>
     <h2 id="role" style="margin:6px 0 6px; color:var(--accent)"></h2>
     <p id="desc" style="max-width:650px; margin:0 auto 14px; line-height:1.5"></p>
-
-    <!-- Прогрев -->
     <div id="campPromo" style="margin:12px auto 8px; max-width:680px; text-align:center;">
       <p style="margin:0 0 8px;">Готовы прожить <strong>ваше лето мечты</strong> в духе пионерлагеря — прямо из дома?</p>
       <ul style="text-align:left; display:inline-block; margin:0; padding-left:18px; line-height:1.5">
@@ -157,18 +95,17 @@
       <p style="margin:12px 0 0;">Присоединяйтесь к интенсиву «Летний лагерь» от ШАГАЙ ДОМА — <em>ваше лето начинается здесь!</em></p>
       <p><a class="cta" href="https://walk-walk.ru/summer_camp?utm_source=website&utm_medium=test&utm_campaign=test" target="_blank" rel="noopener">Хочу в отряд!</a></p>
     </div>
-
-    <div style="margin-top:12px">
-      <button id="replay" class="answer" style="border-style:solid; text-align:center">Пройти ещё раз</button>
-    </div>
+    <div style="margin-top:12px"><button id="replay" class="answer" style="border-style:solid; text-align:center">Пройти ещё раз</button></div>
   </section>
 </div>
 
 <audio id="fireAudio" src="fire.mp3" loop></audio>
 
 <script>
+'use strict';
+
 /* ===== РОЛИ ===== */
-const ROLES = {
+const ROLES={
   "Королева красоты":"Всегда на виду, ухожена, любит сцену и линейки — центр притяжения лагеря.",
   "Любительница компота":"Главная по столовой и душевным разговорам. Знает, где добавка и с кем сидеть за столом.",
   "Самая активная участница":"Везде участвует, всё организует и поднимает настроение отряду.",
@@ -177,8 +114,8 @@ const ROLES = {
   "Спортсменка":"Эстафеты, турслёт, зарядка — её стихия. Командный двигатель."
 };
 
-/* ===== ВОПРОСЫ: 8 × 6 ===== */
-const QUESTIONS = [
+/* ===== ВОПРОСЫ: 8×6 ===== */
+const QUESTIONS=[
   {q:"Что ценного вы ждёте в посылке из дома?",a:[
     {t:"Новая косметичка и заколки",r:"Королева красоты"},
     {t:"Баночка варенья/вкусности",r:"Любительница компота"},
@@ -246,86 +183,46 @@ const QUESTIONS = [
 ];
 
 /* ===== DOM ===== */
-const page = document.getElementById('page');
-const campSwitchEl = document.getElementById('campfireSwitch');
-const fireCanvas = document.getElementById('fireCanvas');
-const sparksCanvas = document.getElementById('sparksCanvas');
-const fctx = fireCanvas.getContext('2d');
-const sctx = sparksCanvas.getContext('2d');
-
-const stage = document.getElementById('stage');
-const flamesBar = document.getElementById('flames').querySelectorAll('.flame');
-
-const resultSection = document.getElementById('result');
-const quizCard = document.getElementById('quiz');
-const roleEl = document.getElementById('role');
-const descEl = document.getElementById('desc');
-const badgeWrap = document.getElementById('badgeWrap');
-const replayBtn = document.getElementById('replay');
-const fireAudio = document.getElementById('fireAudio');
-const nextBtn = document.getElementById('nextBtn');
+let page, campSwitchEl, fireCanvas, sparksCanvas, fctx, sctx, stage, flamesBar,
+    resultSection, quizCard, roleEl, descEl, badgeWrap, replayBtn, fireAudio, nextBtn;
 
 /* ===== STATE ===== */
-let idx = 0;
-let scores = Object.create(null);
-let picked = null;
+let idx=0, scores=Object.create(null), picked=null;
 
 /* ===== РЕНДЕР ===== */
 function renderQuestion(){
-  const total = QUESTIONS.length;
-  const q = QUESTIONS[idx];
+  const total=QUESTIONS.length;
+  const q=QUESTIONS[idx];
 
-  // прогресс-огоньки
-  flamesBar.forEach((f,i)=> f.classList.toggle('on', i < idx));
+  flamesBar.forEach((f,i)=> f.classList.toggle('on', i<idx));
 
-  // старый слайд уезжает
-  const current = stage.querySelector('.slide.active');
-  if (current) { current.classList.remove('active'); current.classList.add('out-left'); setTimeout(()=> current.remove(), 500); }
+  const current=stage.querySelector('.slide.active');
+  if(current){ current.classList.remove('active'); current.classList.add('out-left'); setTimeout(()=>current.remove(),500); }
 
-  // новый
-  const slide = document.createElement('div');
-  slide.className = 'slide in-right';
-  slide.innerHTML = `
+  const slide=document.createElement('div');
+  slide.className='slide in-right';
+  slide.innerHTML=`
     <div id="qnum">Вопрос ${idx+1} из ${total}</div>
     <div id="question">${q.q}</div>
-    <div class="answers-wrap">
-      <div id="answers" class="answers-grid">
-        ${q.a.map(a=>`<button class="answer" data-role="${a.r}">${a.t}</button>`).join('')}
-      </div>
-    </div>
-  `;
+    <div class="answers-wrap"><div id="answers" class="answers-grid">
+      ${q.a.map(a=>`<button class="answer" data-role="${a.r}">${a.t}</button>`).join('')}
+    </div></div>`;
   stage.appendChild(slide);
   requestAnimationFrame(()=>{ slide.classList.remove('in-right'); slide.classList.add('active'); });
 
-  // выбор + активация «Далее»
-  picked = null;
-  nextBtn.disabled = true;
+  picked=null; nextBtn.disabled=true;
   slide.querySelector('#answers').addEventListener('click', (e)=>{
-    const btn = e.target.closest('.answer'); if(!btn) return;
+    const btn=e.target.closest('.answer'); if(!btn) return;
     slide.querySelectorAll('.answer').forEach(x=>x.classList.remove('selected'));
-    btn.classList.add('selected');
-    picked = { role: btn.dataset.role };
-    nextBtn.disabled = false;
+    btn.classList.add('selected'); picked={role:btn.dataset.role}; nextBtn.disabled=false;
   });
 }
 
-nextBtn.addEventListener('click', ()=>{
-  if(!picked) return;
-  scores[picked.role] = (scores[picked.role]||0)+1;
-  idx++;
-  if(idx < QUESTIONS.length) renderQuestion();
-  else showResult();
-});
-
 function showResult(){
-  flamesBar.forEach(f => f.classList.add('on'));
-  quizCard.style.display = 'none';
-  resultSection.style.display = 'block';
-
-  const winner = Object.keys(scores).reduce((a,b)=> (scores[a]||0) > (scores[b]||0) ? a : b);
-  roleEl.textContent = winner;
-  descEl.textContent = ROLES[winner];
-  drawBadge(winner);
+  flamesBar.forEach(f=>f.classList.add('on'));
+  quizCard.style.display='none'; resultSection.style.display='block';
+  const winner=Object.keys(scores).reduce((a,b)=>(scores[a]||0)>(scores[b]||0)?a:b);
+  roleEl.textContent=winner; descEl.textContent=ROLES[winner]; drawBadge(winner);
 }
 
 function drawBadge(role){
@@ -354,106 +251,100 @@ function iconFor(role){
   }
 }
 
-/* ===== КОСТЁР: огонь + искры + звук ===== */
-let running=false, SP=[], RAF=null, last=0, w=0, h=0, fadeTimer=null;
+/* ===== КОСТЁР ===== */
+let running=false, SP=[], RAF=null, lastT=0, W=0, H=0, fadeTimer=null;
 
 function resizeFX(){
-  const r = page.getBoundingClientRect();
-  [fireCanvas, sparksCanvas].forEach(c=>{ c.width = r.width; c.height = r.height; });
-  w = fireCanvas.width; h = fireCanvas.height;
+  const r=page.getBoundingClientRect();
+  [fireCanvas,sparksCanvas].forEach(c=>{ c.width=r.width; c.height=r.height; });
+  W=fireCanvas.width; H=fireCanvas.height;
 }
-addEventListener('resize', resizeFX);
-
-function drawFire(ctx, t){
-  ctx.clearRect(0,0,w,h);
+function drawFire(ctx,t){
+  ctx.clearRect(0,0,W,H);
   for(let i=0;i<24;i++){
-    const cx = w*0.5 + (Math.sin(t*0.002 + i)*w*0.03);
-    const cy = h - 25 - Math.random()*35;
-    const rad = 40 + Math.random()*100;
-    ctx.fillStyle = `hsla(${28+Math.random()*12}, 95%, ${55+Math.random()*15}%, ${0.05+Math.random()*0.09})`;
-    ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI*2); ctx.fill();
+    const cx=W*0.5+(Math.sin(t*0.002+i)*W*0.03);
+    const cy=H-25-Math.random()*35;
+    const rad=40+Math.random()*100;
+    ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*15}%,${0.05+Math.random()*0.09})`;
+    ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
   }
-  const g = ctx.createRadialGradient(w*0.5, h*0.98, 10, w*0.5, h*0.98, Math.min(w,h)*0.7);
-  g.addColorStop(0,'rgba(255,170,70,0.25)');
-  g.addColorStop(1,'rgba(255,170,70,0)');
-  ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+  const g=ctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.min(W,H)*0.7);
+  g.addColorStop(0,'rgba(255,170,70,0.25)'); g.addColorStop(1,'rgba(255,170,70,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
 }
-
 function makeSpark(){
-  const sx = w*(0.46 + Math.random()*0.08);
-  const sy = h + Math.random()*30;
-  const v0 = 90 + Math.random()*160;
-  const vx = (Math.random()*2 - 1)*22;
-  const life = 1.0 + Math.random()*1.6;
-  const size = 1 + Math.random()*2.8;
-  const hue = 28 + Math.random()*14;
-  const phase = Math.random()*Math.PI*2;
+  const sx=W*(0.46+Math.random()*0.08), sy=H+Math.random()*30, v0=90+Math.random()*160, vx=(Math.random()*2-1)*22,
+        life=1.0+Math.random()*1.6, size=1+Math.random()*2.8, hue=28+Math.random()*14, phase=Math.random()*Math.PI*2;
   return {x:sx,y:sy,vx,vy:-v0,life,maxLife:life,size,hue,phase};
 }
-
 function loop(t){
   if(!running) return;
-  const dt = Math.min(0.05,(t-(last||t))/1000); last=t;
-
-  drawFire(fctx, t);
-
-  sctx.clearRect(0,0,w,h);
-  sctx.globalCompositeOperation='lighter';
+  const dt=Math.min(0.05,(t-(lastT||t))/1000); lastT=t;
+  drawFire(fctx,t);
+  sctx.clearRect(0,0,W,H); sctx.globalCompositeOperation='lighter';
   for(let i=0;i<SP.length;i++){
-    const p=SP[i];
-    const wind = Math.sin(t*0.001 + p.phase)*24;
-    const jitter = Math.sin(t*0.006 + p.phase)*4;
-    p.vx += (wind*0.4)*dt; p.x += (p.vx + jitter)*dt; p.y += p.vy*dt;
-    p.life -= dt;
-    const k = Math.max(0, p.life/p.maxLife);
-    const size = p.size*(0.6+0.4*k);
-    const alpha = Math.min(1, 0.18 + k*0.9);
-
-    const trail = sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
-    trail.addColorStop(0, `hsla(${p.hue+5},90%,55%,${alpha*0.35})`);
-    trail.addColorStop(1,'hsla(25,90%,50%,0)');
-    sctx.fillStyle = trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sctx.fill();
-
-    const grad = sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
-    grad.addColorStop(0, `hsla(50,100%,85%,${alpha})`);
-    grad.addColorStop(0.35, `hsla(${p.hue},95%,60%,${alpha*0.9})`);
-    grad.addColorStop(1, `hsla(${p.hue+10},90%,40%,0)`);
-    sctx.fillStyle = grad; sctx.beginPath(); sctx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sctx.fill();
-
-    if (p.life<=0 || p.y<-20 || p.x<-20 || p.x>w+20) SP[i]=makeSpark();
+    const p=SP[i], wind=Math.sin(t*0.001+p.phase)*24, jitter=Math.sin(t*0.006+p.phase)*4;
+    p.vx+=(wind*0.4)*dt; p.x+=(p.vx+jitter)*dt; p.y+=p.vy*dt; p.life-=dt;
+    const k=Math.max(0,p.life/p.maxLife), size=p.size*(0.6+0.4*k), alpha=Math.min(1,0.18+k*0.9);
+    const trail=sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
+    trail.addColorStop(0,`hsla(${p.hue+5},90%,55%,${alpha*0.35})`); trail.addColorStop(1,'hsla(25,90%,50%,0)');
+    sctx.fillStyle=trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sctx.fill();
+    const grad=sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
+    grad.addColorStop(0,`hsla(50,100%,85%,${alpha})`); grad.addColorStop(0.35,`hsla(${p.hue},95%,60%,${alpha*0.9})`);
+    grad.addColorStop(1,`hsla(${p.hue+10},90%,40%,0)`); sctx.fillStyle=grad; sctx.beginPath(); sctx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sctx.fill();
+    if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) SP[i]=makeSpark();
   }
   sctx.globalCompositeOperation='source-over';
-
-  RAF = requestAnimationFrame(loop);
+  RAF=requestAnimationFrame(loop);
 }
-
 function startFX(){
-  if(running) return; running=true;
-  resizeFX();
-  SP = Array.from({length:160}, makeSpark);
-  fireCanvas.style.display='block';
-  sparksCanvas.style.display='block';
-  last=0; RAF=requestAnimationFrame(loop);
+  if(running) return; running=true; resizeFX(); SP=Array.from({length:160},makeSpark);
+  fireCanvas.style.display='block'; sparksCanvas.style.display='block'; lastT=0; RAF=requestAnimationFrame(loop);
 }
-function stopFX(){
-  running=false; if(RAF) cancelAnimationFrame(RAF);
-  fireCanvas.style.display='none';
-  sparksCanvas.style.display='none';
-}
-
-function smoothVolumeTo(target, ms, cb){
+function stopFX(){ running=false; if(RAF) cancelAnimationFrame(RAF); fireCanvas.style.display='none'; sparksCanvas.style.display='none'; }
+function smoothVolumeTo(target,ms,cb){
   if(!fireAudio) return; if(fadeTimer) clearInterval(fadeTimer);
-  const start=fireAudio.volume; const t0=performance.now();
-  fadeTimer=setInterval(()=>{
-    const k=Math.min(1,(performance.now()-t0)/ms);
-    fireAudio.volume = start + (target-start)*k;
-    if(k>=1){ clearInterval(fadeTimer); fadeTimer=null; if(cb) cb(); }
-  }, 16);
+  const start=fireAudio.volume, t0=performance.now();
+  fadeTimer=setInterval(()=>{ const k=Math.min(1,(performance.now()-t0)/ms);
+    fireAudio.volume=start+(target-start)*k; if(k>=1){clearInterval(fadeTimer); fadeTimer=null; cb&&cb();}},16);
 }
 
-/* Тумблер */
-campSwitchEl.addEventListener('change', (e)=>{
-  if(e.target.checked){
-    page.classList.add('night-on');
-    startFX();
-    fireAudio.volume = 0.0; fireAudio.loop = true; fireAudio.play().catch(()
+/* ===== BOOT ===== */
+function boot(){
+  try{
+    // DOM refs
+    page=document.getElementById('page');
+    campSwitchEl=document.getElementById('campfireSwitch');
+    fireCanvas=document.getElementById('fireCanvas');
+    sparksCanvas=document.getElementById('sparksCanvas');
+    fctx=fireCanvas.getContext('2d'); sctx=sparksCanvas.getContext('2d');
+    stage=document.getElementById('stage');
+    flamesBar=document.getElementById('flames').querySelectorAll('.flame');
+    resultSection=document.getElementById('result'); quizCard=document.getElementById('quiz');
+    roleEl=document.getElementById('role'); descEl=document.getElementById('desc'); badgeWrap=document.getElementById('badgeWrap');
+    replayBtn=document.getElementById('replay'); fireAudio=document.getElementById('fireAudio'); nextBtn=document.getElementById('nextBtn');
+
+    // события
+    nextBtn.addEventListener('click', ()=>{
+      if(!picked) return; scores[picked.role]=(scores[picked.role]||0)+1; idx++; (idx<QUESTIONS.length)?renderQuestion():showResult();
+    });
+    replayBtn.addEventListener('click', ()=>location.reload());
+    window.addEventListener('resize', resizeFX);
+    campSwitchEl.addEventListener('change', (e)=>{
+      if(e.target.checked){ page.classList.add('night-on'); startFX(); fireAudio.volume=0.0; fireAudio.loop=true; fireAudio.play().catch(()=>{}); smoothVolumeTo(0.5,300);}
+      else { page.classList.remove('night-on'); stopFX(); smoothVolumeTo(0.0,200,()=>{ try{fireAudio.pause(); fireAudio.currentTime=0;}catch(_){}}); }
+    });
+
+    // старт
+    idx=0; scores=Object.create(null); renderQuestion();
+  }catch(err){
+    console.error('Boot error:', err);
+    if(stage){
+      stage.innerHTML = `<div class="slide active"><div id="question">Упс! Ошибка инициализации:<br>${err.message}</div></div>`;
+    }
+  }
+}
+window.addEventListener('DOMContentLoaded', boot);
+</script>
+</body>
+</html>
