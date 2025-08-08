@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кто ты в летнем лагере?</title>
+<style>
+  body {
+    font-family: 'Courier New', monospace;
+    background: url('https://i.ibb.co/0FThV1P/paper-texture.jpg') repeat;
+    margin: 0; padding: 0;
+    color: #3a2f2f;
+  }
+  .container {
+    max-width: 700px;
+    margin: auto;
+    padding: 20px;
+    background: rgba(255, 248, 220, 0.9);
+    border: 5px solid #b22222;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    animation: fadeIn 1s ease-in-out;
+  }
+  h1 {
+    text-align: center;
+    font-family: 'Brush Script MT', cursive;
+    font-size: 2.5em;
+    color: #b22222;
+  }
+  .question {
+    margin: 20px 0;
+  }
+  .answers button {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px;
+    background: #fff8dc;
+    border: 2px solid #b22222;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .answers button:hover {
+    background: #ffeb99;
+    transform: scale(1.02);
+  }
+  .result {
+    display: none;
+    text-align: center;
+    padding: 20px;
+  }
+  .badge {
+    width: 150px;
+    margin: 20px auto;
+  }
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Кто ты в летнем лагере?</h1>
+  <div id="quiz"></div>
+  <div class="result" id="result">
+    <img id="badge" class="badge" src="" alt="Значок">
+    <h2 id="role"></h2>
+    <p id="description"></p>
+    <button onclick="location.reload()">Пройти ещё раз</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Что для вас самое важное в лагере?",
+    a: [
+      {text: "Выглядеть на все 100", role: "Звезда линейки"},
+      {text: "Поспать и почитать", role: "Хозяйка тихого часа"},
+      {text: "Вечера у костра", role: "Королева костра"},
+      {text: "Побеждать в эстафетах", role: "Чемпионка турслёта"},
+      {text: "Обмены сладостями", role: "Карамельная королева"},
+      {text: "Компот и вкусности", role: "Любительница компота"},
+      {text: "Весёлые розыгрыши", role: "Секретная хулиганка"}
+    ]
+  },
+  {
+    q: "Что вы ждёте в посылке из дома?",
+    a: [
+      {text: "Новую форму", role: "Звезда линейки"},
+      {text: "Книгу или журнал", role: "Хозяйка тихого часа"},
+      {text: "Фонарик и батарейки", role: "Королева костра"},
+      {text: "Кроссовки для эстафет", role: "Чемпионка турслёта"},
+      {text: "Пакет карамелек", role: "Карамельная королева"},
+      {text: "Домашнее варенье", role: "Любительница компота"},
+      {text: "Шуточную открытку", role: "Секретная хулиганка"}
+    ]
+  }
+  // Добавь остальные вопросы сюда по такому же принципу
+];
+
+const roles = {
+  "Звезда линейки": "Всегда на первых рядах, галстук как с обложки, осанка — пример для всех. Линейка для неё — как красная дорожка.",
+  "Хозяйка тихого часа": "Мастер читать под одеялом и обмениваться книжками «из-под полы». Может проспать полдня, но всё равно в курсе всех лагерных событий.",
+  "Королева костра": "Гитара, песни, страшилки и разговоры «до отбоя». Вечером вокруг неё собирается весь отряд.",
+  "Чемпионка турслёта": "Первая в эстафете, незаменимая в походах. Знает, как разжечь костёр, и может донести котелок даже по самому крутому склону.",
+  "Карамельная королева": "Мастер карточных игр на фантики, обменов и карамельных сделок. У неё всегда есть сладости и пара секретов в запасе.",
+  "Любительница компота": "Знает расписание всех приёмов пищи, дружит с дежурными по столовой и всегда находит способ взять добавку.",
+  "Секретная хулиганка": "С виду пай-девочка, но только до отбоя. Может подложить зубную пасту в тапок или намылить ручку соседнего отряда."
+};
+
+let currentQuestion = 0;
+let score = {};
+
+function showQuestion() {
+  let q = questions[currentQuestion];
+  let quizDiv = document.getElementById('quiz');
+  quizDiv.innerHTML = `<div class="question"><h2>${q.q}</h2></div><div class="answers"></div>`;
+  let answersDiv = quizDiv.querySelector('.answers');
+  q.a.forEach(answer => {
+    let btn = document.createElement('button');
+    btn.textContent = answer.text;
+    btn.onclick = () => {
+      score[answer.role] = (score[answer.role] || 0) + 1;
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    };
+    answersDiv.appendChild(btn);
+  });
+}
+
+function showResult() {
+  let topRole = Object.keys(score).reduce((a,b) => score[a] > score[b] ? a : b);
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('role').textContent = topRole;
+  document.getElementById('description').textContent = roles[topRole];
+  document.getElementById('badge').src = `images/${topRole}.png`; // можно нарисовать значки
+}
+
+showQuestion();
+</script>
+
+</body>
+  </html>
