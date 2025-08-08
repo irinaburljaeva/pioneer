@@ -1,427 +1,301 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!DOCTYPE html><html lang="ru"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Кто ты в летнем лагере? — ШАГАЙ ДОМА</title>
 <style>
-:root{--ink:#2e2623;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f;--night-dim:rgba(10,12,18,.45);--navH:64px}
+:root{--ink:#2e2623;--accent:#b22222;--paper:#fff8e6;--blue:#1f4a7f;--night:rgba(10,12,18,.5)}
 html,body{height:100%}
-body{margin:0;color:var(--ink);background:radial-gradient(1200px 600px at top left,#fff6d8 0%,#fffaf0 35%,#fff 60%) fixed;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif}
-body.camp-night::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:var(--night-dim)}
-.fx-layer{position:fixed;inset:0;z-index:1;pointer-events:none;display:none;width:100%;height:100%}
+body{margin:0;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial,sans-serif;background:radial-gradient(1200px 600px at top left,#fff6d8 0%,#fffaf0 35%,#fff 60%) fixed}
+body.night::before{content:"";position:fixed;inset:0;background:var(--night);z-index:0;pointer-events:none}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:1;display:none}
 
-.page{max-width:900px;margin:20px auto;padding:20px;position:relative;z-index:2;background:var(--paper);border-radius:18px;overflow:hidden;
-  box-shadow:0 30px 60px rgba(0,0,0,.14),inset 0 0 0 2px #e7d9b6,0 0 0 6px rgba(255,255,255,.7),inset 0 0 0 8px #f4ecd1}
-
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.page{max-width:900px;margin:20px auto;padding:20px;background:var(--paper);border-radius:18px;
+  box-shadow:0 30px 60px rgba(0,0,0,.14),inset 0 0 0 2px #e7d9b6,0 0 0 6px rgba(255,255,255,.7),inset 0 0 0 8px #f4ecd1;position:relative;z-index:2}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
 h1{margin:0;color:var(--accent);font-size:24px}
-.flames{display:flex;gap:6px;align-items:center}
-.flame{font-size:18px;opacity:.25;transition:opacity .25s,transform .25s}
-.flame.on{opacity:1;transform:translateY(-2px)}
+.flames{display:flex;gap:6px}.flame{opacity:.25;transition:.2s}.flame.on{opacity:1;transform:translateY(-2px)}
 
-.camp-toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
-.switch{position:relative;display:inline-block;width:50px;height:28px}
+.toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin:8px 0 12px}
+.switch{position:relative;width:50px;height:28px;display:inline-block}
 .switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s}
-.slider:before{position:absolute;content:"";height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.switch input:checked + .slider{background:#f59e0b}
-.switch input:checked + .slider:before{transform:translateX(22px)}
+.slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;transition:.2s}
+.slider:before{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch input:checked+.slider{background:#f59e0b}.switch input:checked+.slider:before{transform:translateX(22px)}
 
-.card{position:relative;z-index:2;background:linear-gradient(#fffef7,#fffaf0);
-  border:1px solid #e8e0c7;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.card{position:relative;background:linear-gradient(#fffef7,#fffaf0);border:1px solid #e8e0c7;border-radius:16px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
 .stage{position:relative;min-height:340px}
 
-/* интро как кнопка */
-.intro-cover{position:absolute;inset:0;z-index:9999;border:0;background:transparent;padding:10px;cursor:pointer;transition:opacity .3s;
-  display:flex;align-items:center;justify-content:center}
-.intro-cover img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:14px;
-  box-shadow:0 12px 30px rgba(0,0,0,.18);user-select:none;-webkit-user-drag:none;pointer-events:none}
-.intro-cover:focus-visible{outline:4px solid var(--accent);outline-offset:-6px}
-.intro-cover.fade-out{opacity:0;pointer-events:none}
-body.prestart .stage{min-height:min(82vh,860px)}
+.intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:10px;background:transparent;border:0;cursor:pointer;z-index:9}
+.intro img{max-width:100%;max-height:100%;border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);pointer-events:none;user-select:none}
+.intro.hide{opacity:0;pointer-events:none;transition:.25s}
 
-/* перелистывание */
-.slide{position:absolute;inset:0;opacity:0;transform:translateX(45px) rotateY(-4deg);
-  transition:transform .55s cubic-bezier(.2,.7,.2,1),opacity .55s}
-.slide.active{opacity:1;transform:translateX(0) rotateY(0)}
-.slide.out-left{opacity:0;transform:translateX(-45px) rotateY(6deg)}
-.slide.in-right{opacity:0;transform:translateX(45px) rotateY(-6deg)}
-.slide.in-right.active{opacity:1;transform:translateX(0) rotateY(0)}
+.slide{position:absolute;inset:0;opacity:0;transform:translateX(40px) rotateY(-4deg);transition:.45s}
+.slide.active{opacity:1;transform:none}.slide.out{opacity:0;transform:translateX(-40px) rotateY(6deg)}
 
 #qnum{font-size:12px;text-transform:uppercase;color:#5c6b7a;margin:6px 0}
 #question{font-size:22px;margin:6px 0 12px}
 
-/* запас под кнопку «Далее» */
-.answers-wrap{padding-right:4px;padding-bottom:calc(var(--navH) + 48px);max-height:65vh;overflow:auto}
-@media (max-width:420px){.answers-wrap{padding-bottom:140px}}
-.answers-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;cursor:pointer;
-  transition:background .15s,box-shadow .2s;box-shadow:0 2px 0 rgba(0,0,0,.06)}
-.answer:hover{background:#fff2c7;box-shadow:0 4px 12px rgba(0,0,0,.07)}
-.answer.selected{outline:3px solid var(--accent)}
+.answers{max-height:65vh;overflow:auto;padding-right:4px;
+  /* динамический отступ под липкую панель с кнопкой */
+  padding-bottom:calc(var(--navPad, 140px) + env(safe-area-inset-bottom))}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.answer{display:block;width:100%;text-align:left;padding:12px 14px;border:2px dashed var(--blue);border-radius:12px;background:#fdf8ea;box-shadow:0 2px 0 rgba(0,0,0,.06);cursor:pointer}
+.answer:hover{background:#fff2c7}.answer.sel{outline:3px solid var(--accent)}
 
-.nav{position:sticky;bottom:0;z-index:5;display:flex;justify-content:flex-end;align-items:center;gap:12px;
-  padding:10px 6px calc(10px + env(safe-area-inset-bottom));
-  background:linear-gradient(180deg,rgba(255,255,255,0),#fffaf0 40%);border-bottom-left-radius:14px;border-bottom-right-radius:14px}
-#nextBtn{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-weight:700;cursor:pointer;
-  box-shadow:0 6px 18px rgba(178,34,34,.25)}
-#nextBtn:disabled{opacity:.6;box-shadow:none;cursor:not-allowed}
+.nav{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,#fffaf0 40%);
+  padding:10px 6px calc(10px + env(safe-area-inset-bottom));border-bottom-left-radius:14px;border-bottom-right-radius:14px;display:flex;justify-content:flex-end}
+#next{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:10px 18px;font-weight:700;box-shadow:0 6px 18px rgba(178,34,34,.25)}
+#next:disabled{opacity:.6;box-shadow:none}
 
-#result{display:none;text-align:center;position:relative;z-index:2}
-.badge-wrap{margin:18px auto 8px;width:170px;height:170px;position:relative}
+#result{text-align:center;display:none}
+.badge{width:180px;height:180px;margin:16px auto 8px}
 .cta{display:inline-block;margin-top:16px;padding:12px 24px;background:#b22222;color:#fff;border-radius:24px;text-decoration:none;font-weight:700}
 
-/* спрятать интерфейс до старта */
-body.prestart .topbar,body.prestart .camp-toggle,body.prestart #nav{display:none!important}
+body.prestart .top,body.prestart .toggle,body.prestart .nav{display:none!important}
 </style>
 
-<!-- ФОЛБЭКИ: работают даже без основного JS -->
+<!-- минимальный фолбэк старта -->
 <script>
-(function () {
-  window.__quizShouldStart = false;
-
-  // безопасный обработчик интро
-  window.startQuiz = function () {
-    try {
-      if (!document.body.classList.contains('prestart')) return;
-      document.body.classList.remove('prestart');
-      var btn = document.getElementById('startBtn');
-      if (btn) { btn.classList.add('fade-out'); setTimeout(function(){ btn.remove(); }, 250); }
-      // визуальная заглушка, чтобы было видно, что что-то происходит
-      var st = document.getElementById('stage');
-      if (st) st.innerHTML = '<div class="slide active" style="display:flex;align-items:center;justify-content:center;color:#7b6b5a">Загрузка…</div>';
-      window.__quizShouldStart = true;
-      if (typeof window.renderQuestion === 'function') window.renderQuestion();
-    } catch (e) { console.error('fallback startQuiz error:', e); }
-  };
-
-  // безопасный обработчик костра (ничего не делает до подмены)
-  window.__toggleCampfire = function(){};
-})();
+  window.__startWanted=false;
+  function startQuiz(){
+    if(!document.body.classList.contains('prestart')) return;
+    document.body.classList.remove('prestart');
+    const b=document.getElementById('intro'); if(b){b.classList.add('hide'); setTimeout(()=>b.remove(),250);}
+    document.getElementById('stage').innerHTML='<div class="slide active" style="display:flex;align-items:center;justify-content:center;color:#7b6b5a">Загрузка…</div>';
+    window.__startWanted=true;
+    if(typeof renderQuestion==="function") renderQuestion();
+  }
 </script>
 </head>
 <body class="prestart">
-
-<!-- эффекты костра -->
-<canvas id="fireCanvas" class="fx-layer"></canvas>
-<canvas id="sparksCanvas" class="fx-layer"></canvas>
+<canvas id="fx" class="fx"></canvas>
 
 <div class="page">
-  <div class="topbar">
+  <div class="top">
     <h1>Кто ты в летнем лагере?</h1>
-    <div class="flames" id="flames" aria-label="Прогресс">
+    <div class="flames" id="flames">
       <span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span>
       <span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span><span class="flame">🔥</span>
     </div>
   </div>
 
-  <div class="camp-toggle">
-    <label class="switch">
-      <!-- вызываем безопасный стек через onChange -->
-      <input id="campfireSwitch" type="checkbox" onchange="window.__toggleCampfire && window.__toggleCampfire(this.checked)"/><span class="slider"></span>
-    </label>
+  <div class="toggle">
+    <label class="switch"><input id="camp" type="checkbox"><span class="slider"></span></label>
     <span style="font-size:14px;color:#555">Атмосфера костра</span>
   </div>
 
-  <section id="quiz" class="card" aria-live="polite">
-    <!-- интро с inline onclick -->
-    <button id="startBtn" class="intro-cover" type="button" aria-label="Начать тест" onclick="startQuiz()">
-      <img src="intro.png" alt="Летний лагерь — начните тест"/>
-    </button>
-
-    <div class="stage" id="stage"></div>
-    <div class="nav" id="nav"><button id="nextBtn" disabled>Далее</button></div>
+  <section class="card" id="quiz" aria-live="polite">
+    <button id="intro" class="intro" onclick="startQuiz()"><img src="intro.png" alt="Начать тест"></button>
+    <div id="stage" class="stage"></div>
+    <div class="nav"><button id="next" disabled>Далее</button></div>
   </section>
 
-  <section id="result" class="card" style="display:none;">
-    <div class="badge-wrap" id="badgeWrap"></div>
-    <h2 id="role" style="margin:6px 0 6px;color:var(--accent)"></h2>
+  <section id="result" class="card">
+    <div class="badge" id="badge"></div>
+    <h2 id="role" style="color:var(--accent)"></h2>
     <p id="desc" style="max-width:650px;margin:0 auto 14px;line-height:1.5"></p>
-    <div style="margin:12px auto 8px;max-width:680px;text-align:center;">
-      <p style="margin:0 0 8px;">Готовы прожить <strong>ваше лето мечты</strong> в духе пионерлагеря — прямо из дома?</p>
+    <div style="margin:12px auto 8px;max-width:680px;text-align:center">
+      <p style="margin:0 0 8px">Готовы прожить <b>ваше лето мечты</b> в духе пионерлагеря — прямо из дома?</p>
       <ul style="text-align:left;display:inline-block;margin:0;padding-left:18px;line-height:1.5">
-        <li><strong>Шагательные дискотеки</strong> каждый день — любимая музыка и лёгкие ритмы вместо скучных тренировок</li>
+        <li><b>Шагательные дискотеки</b> каждый день — любимая музыка и лёгкие ритмы вместо скучных тренировок</li>
         <li>Лагерные игры, душевные посиделки и поддержка команды</li>
         <li>«Лагерное меню»: вкусно, сытно и без чувства вины</li>
-        <li><strong>Онлайн-лагерь:</strong> всё проходит дистанционно — из дома выходить не нужно</li>
+        <li><b>Онлайн-лагерь:</b> всё дистанционно — из дома выходить не нужно</li>
       </ul>
-      <p style="margin:12px 0 0;">Присоединяйтесь к интенсиву «Летний лагерь» от ШАГАЙ ДОМА — <em>ваше лето начинается здесь!</em></p>
+      <p style="margin:12px 0 0">Присоединяйтесь к интенсиву «Летний лагерь» от ШАГАЙ ДОМА — <i>ваше лето начинается здесь!</i></p>
       <p><a class="cta" href="https://walk-walk.ru/summer_camp?utm_source=website&utm_medium=test&utm_campaign=test" target="_blank" rel="noopener">Хочу в отряд!</a></p>
     </div>
-    <div style="margin-top:12px"><button id="replay" class="answer" style="border-style:solid;text-align:center">Пройти ещё раз</button></div>
+    <div style="margin-top:12px"><button onclick="location.reload()" class="answer" style="border-style:solid;text-align:center">Пройти ещё раз</button></div>
   </section>
 </div>
 
 <audio id="fireAudio" src="fire.mp3" loop></audio>
 
 <script>
-'use strict';
-/* === ГЛАВНЫЙ КОД: после DOMContentLoaded === */
-document.addEventListener('DOMContentLoaded', function(){
+/* ===== ДАННЫЕ ===== */
+const ROLES={
+ "Королева красоты":"Всегда на виду, ухожена, любит сцену и линейки — центр притяжения лагеря.",
+ "Любительница компота":"Главная по столовой и душевным разговорам. Знает, где добавка и с кем сидеть за столом.",
+ "Самая активная участница":"Везде участвует, всё организует и поднимает настроение отряду.",
+ "Тайная проказница":"Пай-девочка до отбоя, а потом — мастер дружеских розыгрышей.",
+ "Игрок в карты на карамельки":"Тактик и стратег. Даже фантики обменивает с выгодой.",
+ "Спортсменка":"Эстафеты, турслёт, зарядка — её стихия. Командный двигатель."
+};
+const QUESTIONS=[
+ {q:"Чем вы больше всего хотите заниматься в лагере?",a:[
+  {t:"Готовить выступления, дефиле",r:"Королева красоты"},
+  {t:"Сидеть у столовой с подружками",r:"Любительница компота"},
+  {t:"Организовывать конкурсы/квесты",r:"Самая активная участница"},
+  {t:"Придумывать безобидные шалости",r:"Тайная проказница"},
+  {t:"Играть в карты до отбоя",r:"Игрок в карты на карамельки"},
+  {t:"Бегать эстафеты и играть в волейбол",r:"Спортсменка"}]},
+ {q:"Что ценного вы ждёте в посылке из дома?",a:[
+  {t:"Новая косметичка и заколки",r:"Королева красоты"},
+  {t:"Баночка варенья/вкусности",r:"Любительница компота"},
+  {t:"Плакаты, флажки, эмблемы",r:"Самая активная участница"},
+  {t:"Шуточная открытка/жвачки",r:"Тайная проказница"},
+  {t:"Колода карт и фантики",r:"Игрок в карты на карамельки"},
+  {t:"Спортивные носки/бутылка",r:"Спортсменка"}]},
+ {q:"Любимое блюдо в столовой:",a:[
+  {t:"Котлета с пюре",r:"Королева красоты"},
+  {t:"Компот (и добавку!)",r:"Любительница компота"},
+  {t:"Оливье/салатики на праздник",r:"Самая активная участница"},
+  {t:"Булочка к чаю «украдкой»",r:"Тайная проказница"},
+  {t:"Шоколадка из обмена",r:"Игрок в карты на карамельки"},
+  {t:"Макароны по-флотски",r:"Спортсменка"}]},
+ {q:"Ночь в лагере — это…",a:[
+  {t:"Красивые пижамы и сон",r:"Королева красоты"},
+  {t:"Тихий чай с компотом на кухне",r:"Любительница компота"},
+  {t:"Обсуждение планов отряда",r:"Самая активная участница"},
+  {t:"Страшилки и походы за вкусняшками",r:"Тайная проказница"},
+  {t:"Партия в карты до отбоя",r:"Игрок в карты на карамельки"},
+  {t:"Ранняя пробежка на рассвете",r:"Спортсменка"}]},
+ {q:"Медляк на дискотеке — это…",a:[
+  {t:"Мой звёздный час",r:"Королева красоты"},
+  {t:"Сбегать за компотом и вернуться",r:"Любительница компота"},
+  {t:"Позвать всех на флешмоб",r:"Самая активная участница"},
+  {t:"Шутка над диджеем",r:"Тайная проказница"},
+  {t:"Сделка: кто танцует — тот должен фантик",r:"Игрок в карты на карамельки"},
+  {t:"Передышка между танцами",r:"Спортсменка"}]},
+ {q:"Если бы вы стали вожатой, первым делом…",a:[
+  {t:"Сделала фотозону и дефиле",r:"Королева красоты"},
+  {t:"Наладила чайно-компотные посиделки",r:"Любительница компота"},
+  {t:"Запустила ежедневные челленджи",r:"Самая активная участница"},
+  {t:"Придумала добрые розыгрыши",r:"Тайная проказница"},
+  {t:"Научила всех карточным фишкам",r:"Игрок в карты на карамельки"},
+  {t:"Организовала турнир по эстафетам",r:"Спортсменка"}]},
+ {q:"Лучший трофей из лагеря — это…",a:[
+  {t:"Фото со сцены и значок",r:"Королева красоты"},
+  {t:"Рецепт фирменного компота",r:"Любительница компота"},
+  {t:"Грамота «Самый активный отряд»",r:"Самая активная участница"},
+  {t:"Тайная записка, найденная ночью",r:"Тайная проказница"},
+  {t:"Пачка карамелек, выигранная в карты",r:"Игрок в карты на карамельки"},
+  {t:"Медаль/повязка чемпиона",r:"Спортсменка"}]},
+ {q:"Где ваше любимое место в лагере?",a:[
+  {t:"Сцена клуба и линейки",r:"Королева красоты"},
+  {t:"Столовая",r:"Любительница компота"},
+  {t:"Площадка для общих сборов",r:"Самая активная участница"},
+  {t:"Тропинка к костровой поляне",r:"Тайная проказница"},
+  {t:"Стол для карточных баталий",r:"Игрок в карты на карамельки"},
+  {t:"Стадион/спортплощадка",r:"Спортсменка"}]}
+];
 
-  /* роли */
-  var ROLES={
-    "Королева красоты":"Всегда на виду, ухожена, любит сцену и линейки — центр притяжения лагеря.",
-    "Любительница компота":"Главная по столовой и душевным разговорам. Знает, где добавка и с кем сидеть за столом.",
-    "Самая активная участница":"Везде участвует, всё организует и поднимает настроение отряду.",
-    "Тайная проказница":"Пай-девочка до отбоя, а потом — мастер дружеских розыгрышей.",
-    "Игрок в карты на карамельки":"Тактик и стратег. Даже фантики обменивает с выгодой.",
-    "Спортсменка":"Эстафеты, турслёт, зарядка — её стихия. Командный двигатель."
-  };
+/* ===== ЛОГИКА ТЕСТА ===== */
+const stage=document.getElementById('stage');
+const flames=[...document.querySelectorAll('#flames .flame')];
+const nextBtn=document.getElementById('next');
+const result=document.getElementById('result');
+const quiz=document.getElementById('quiz');
+const roleEl=document.getElementById('role'), descEl=document.getElementById('desc'), badge=document.getElementById('badge');
+const nav=document.querySelector('.nav');
 
-  /* 8 вопросов */
-  var QUESTIONS=[
-    {q:"Чем вы больше всего хотите заниматься в лагере?",a:[
-      {t:"Готовить выступления, дефиле",r:"Королева красоты"},
-      {t:"Сидеть у столовой с подружками",r:"Любительница компота"},
-      {t:"Организовывать конкурсы/квесты",r:"Самая активная участница"},
-      {t:"Придумывать безобидные шалости",r:"Тайная проказница"},
-      {t:"Играть в карты до отбоя",r:"Игрок в карты на карамельки"},
-      {t:"Бегать эстафеты и играть в волейбол",r:"Спортсменка"}]},
-    {q:"Что ценного вы ждёте в посылке из дома?",a:[
-      {t:"Новая косметичка и заколки",r:"Королева красоты"},
-      {t:"Баночка варенья/вкусности",r:"Любительница компота"},
-      {t:"Плакаты, флажки, эмблемы",r:"Самая активная участница"},
-      {t:"Шуточная открытка/жвачки",r:"Тайная проказница"},
-      {t:"Колода карт и фантики",r:"Игрок в карты на карамельки"},
-      {t:"Спортивные носки/бутылка",r:"Спортсменка"}]},
-    {q:"Любимое блюдо в столовой:",a:[
-      {t:"Котлета с пюре",r:"Королева красоты"},
-      {t:"Компот (и добавку!)",r:"Любительница компота"},
-      {t:"Оливье/салатики на праздник",r:"Самая активная участница"},
-      {t:"Булочка к чаю «украдкой»",r:"Тайная проказница"},
-      {t:"Шоколадка из обмена",r:"Игрок в карты на карамельки"},
-      {t:"Макароны по-флотски",r:"Спортсменка"}]},
-    {q:"Ночь в лагере — это…",a:[
-      {t:"Красивые пижамы и сон",r:"Королева красоты"},
-      {t:"Тихий чай с компотом на кухне",r:"Любительница компота"},
-      {t:"Обсуждение планов отряда",r:"Самая активная участница"},
-      {t:"Страшилки и походы за вкусняшками",r:"Тайная проказница"},
-      {t:"Партия в карты до отбоя",r:"Игрок в карты на карамельки"},
-      {t:"Ранняя пробежка на рассвете",r:"Спортсменка"}]},
-    {q:"Медляк на дискотеке — это…",a:[
-      {t:"Мой звёздный час",r:"Королева красоты"},
-      {t:"Сбегать за компотом и вернуться",r:"Любительница компота"},
-      {t:"Позвать всех на флешмоб",r:"Самая активная участница"},
-      {t:"Шутка над диджеем",r:"Тайная проказница"},
-      {t:"Сделка: кто танцует — тот должен фантик",r:"Игрок в карты на карамельки"},
-      {t:"Передышка между танцами",r:"Спортсменка"}]},
-    {q:"Если бы вы стали вожатой, первым делом…",a:[
-      {t:"Сделала фотозону и дефиле",r:"Королева красоты"},
-      {t:"Наладила чайно-компотные посиделки",r:"Любительница компота"},
-      {t:"Запустила ежедневные челленджи",r:"Самая активная участница"},
-      {t:"Придумала добрые розыгрыши",r:"Тайная проказница"},
-      {t:"Научила всех новым карточным фишкам",r:"Игрок в карты на карамельки"},
-      {t:"Организовала турнир по эстафетам",r:"Спортсменка"}]},
-    {q:"Лучший трофей из лагеря — это…",a:[
-      {t:"Фото со сцены и значок",r:"Королева красоты"},
-      {t:"Рецепт фирменного компота",r:"Любительница компота"},
-      {t:"Грамота «Самый активный отряд»",r:"Самая активная участница"},
-      {t:"Тайная записка, найденная ночью",r:"Тайная проказница"},
-      {t:"Пачка карамелек, выигранная в карты",r:"Игрок в карты на карамельки"},
-      {t:"Медаль/повязка чемпиона",r:"Спортсменка"}]},
-    {q:"Где ваше любимое место в лагере?",a:[
-      {t:"Сцена клуба и линейки",r:"Королева красоты"},
-      {t:"Столовая",r:"Любительница компота"},
-      {t:"Площадка для общих сборов",r:"Самая активная участница"},
-      {t:"Тропинка к костровой поляне",r:"Тайная проказница"},
-      {t:"Стол для карточных баталий",r:"Игрок в карты на карамельки"},
-      {t:"Стадион/спортплощадка",r:"Спортсменка"}]}
-  ];
+function setNavPad(){
+  const h = nav ? nav.getBoundingClientRect().height : 64;
+  document.documentElement.style.setProperty('--navPad', (h + 32) + 'px'); // +запас
+}
+setNavPad(); window.addEventListener('resize', setNavPad);
 
-  /* DOM-ссылки */
-  var fireCanvas=document.getElementById('fireCanvas');
-  var sparksCanvas=document.getElementById('sparksCanvas');
-  var fctx=fireCanvas.getContext('2d');
-  var sctx=sparksCanvas.getContext('2d');
-  var stage=document.getElementById('stage');
-  var flamesBar=document.querySelectorAll('#flames .flame');
-  var resultSection=document.getElementById('result');
-  var quizCard=document.getElementById('quiz');
-  var roleEl=document.getElementById('role');
-  var descEl=document.getElementById('desc');
-  var badgeWrap=document.getElementById('badgeWrap');
-  var nextBtn=document.getElementById('nextBtn');
-  var navEl=document.getElementById('nav');
-  var campSwitch=document.getElementById('campfireSwitch');
-  var fireAudio=document.getElementById('fireAudio');
+let i=0, pick=null, scores={};
+function markProgress(){flames.forEach((f,idx)=>f.classList.toggle('on',idx<i));}
 
-  var idx=0, scores=Object.create(null), picked=null;
-
-  function updateNavPadding(){
-    var h = navEl.getBoundingClientRect().height || 64;
-    var extra = 32;
-    document.documentElement.style.setProperty('--navH', (h + extra) + 'px');
-  }
-  function updateFlames(){ for(var i=0;i<flamesBar.length;i++){ flamesBar[i].classList.toggle('on', i<idx); } }
-
-  function renderQuestion(){
-    var q=QUESTIONS[idx], total=QUESTIONS.length;
-    updateNavPadding(); updateFlames();
-    var cur=stage.querySelector('.slide.active');
-    if(cur){ cur.classList.remove('active'); cur.classList.add('out-left'); setTimeout(function(){cur.remove();},500); }
-    var slide=document.createElement('div');
-    slide.className='slide in-right';
-    slide.innerHTML=
-      '<div id="qnum">Вопрос '+(idx+1)+' из '+total+'</div>'+
-      '<div id="question">'+q.q+'</div>'+
-      '<div class="answers-wrap"><div id="answers" class="answers-grid">'+
-      q.a.map(function(a){ return '<button class="answer" data-role="'+a.r+'">'+a.t+'</button>'; }).join('')+
-      '</div></div>';
-    stage.appendChild(slide);
-    requestAnimationFrame(function(){ slide.classList.remove('in-right'); slide.classList.add('active'); });
-    picked=null; nextBtn.disabled=true;
-    slide.querySelector('#answers').addEventListener('click',function(e){
-      var btn=e.target.closest('.answer'); if(!btn) return;
-      var all=slide.querySelectorAll('.answer'); for(var j=0;j<all.length;j++){ all[j].classList.remove('selected'); }
-      btn.classList.add('selected'); picked={role:btn.getAttribute('data-role')}; nextBtn.disabled=false;
-    });
-  }
-  window.renderQuestion = renderQuestion; // чтобы фолбэк мог вызвать
-
-  nextBtn.addEventListener('click', function(){
-    if(!picked) return;
-    scores[picked.role]=(scores[picked.role]||0)+1; idx++;
-    if(idx<QUESTIONS.length){ renderQuestion(); } else { showResult(); }
+function renderQuestion(){
+  const q=QUESTIONS[i], total=QUESTIONS.length; markProgress();
+  const cur=stage.querySelector('.slide.active'); if(cur){cur.classList.add('out'); setTimeout(()=>cur.remove(),450);}
+  const el=document.createElement('div');
+  el.className='slide'; el.innerHTML=
+    `<div id="qnum">Вопрос ${i+1} из ${total}</div>
+     <div id="question">${q.q}</div>
+     <div class="answers"><div class="grid">
+       ${q.a.map(a=>`<button class="answer" data-r="${a.r}">${a.t}</button>`).join('')}
+     </div></div>`;
+  stage.appendChild(el); requestAnimationFrame(()=>el.classList.add('active'));
+  pick=null; nextBtn.disabled=true;
+  el.querySelector('.grid').addEventListener('click',e=>{
+    const btn=e.target.closest('.answer'); if(!btn) return;
+    el.querySelectorAll('.answer').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel'); pick=btn.dataset.r; nextBtn.disabled=false;
   });
+  setNavPad();
+}
+window.renderQuestion=renderQuestion;
 
-  function showResult(){
-    for(var i=0;i<flamesBar.length;i++){ flamesBar[i].classList.add('on'); }
-    quizCard.style.display='none'; resultSection.style.display='block';
-    var keys=Object.keys(scores), winner=keys[0];
-    for(var k=1;k<keys.length;k++){ if((scores[keys[k]]||0)>(scores[winner]||0)) winner=keys[k]; }
-    roleEl.textContent=winner; descEl.textContent=ROLES[winner]; drawBadge(winner);
-  }
-
-  function drawBadge(role){
-    badgeWrap.innerHTML='';
-    var NS='http://www.w3.org/2000/svg';
-    var svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 200 200'); svg.style.width='100%'; svg.style.height='100%';
-    var defs=document.createElementNS(NS,'defs');
-    var glow=document.createElementNS(NS,'radialGradient'); glow.id='g1';
-    glow.innerHTML='<stop offset="0%" stop-color="#fff6d6"/><stop offset="65%" stop-color="#f1c16d"/><stop offset="100%" stop-color="#c58a21"/>';
-    var ring=document.createElementNS(NS,'linearGradient'); ring.id='ring';
-    ring.innerHTML='<stop offset="0%" stop-color="#d8c08a"/><stop offset="100%" stop-color="#b49454"/>';
-    defs.appendChild(glow); defs.appendChild(ring); svg.appendChild(defs);
-    var circle=document.createElementNS(NS,'circle'); circle.setAttribute('cx','100'); circle.setAttribute('cy','100'); circle.setAttribute('r','78');
-    circle.setAttribute('fill','url(#g1)'); svg.appendChild(circle);
-    var stroke=document.createElementNS(NS,'circle'); stroke.setAttribute('cx','100'); stroke.setAttribute('cy','100'); stroke.setAttribute('r','78');
-    stroke.setAttribute('fill','none'); stroke.setAttribute('stroke','url(#ring)'); stroke.setAttribute('stroke-width','6'); svg.appendChild(stroke);
-    var icons={'Королева красоты':'👑','Любительница компота':'🥤','Самая активная участница':'⭐','Тайная проказница':'😼','Игрок в карты на карамельки':'🃏','Спортсменка':'🏅'};
-    var t1=document.createElementNS(NS,'text'); t1.setAttribute('x','100'); t1.setAttribute('y','105'); t1.setAttribute('text-anchor','middle');
-    t1.setAttribute('dominant-baseline','central'); t1.setAttribute('font-size','48'); t1.setAttribute('font-weight','700'); t1.setAttribute('fill','#612e0a'); t1.textContent=icons[role]||'⭐'; svg.appendChild(t1);
-    var t2=document.createElementNS(NS,'text'); t2.setAttribute('x','100'); t2.setAttribute('y','188'); t2.setAttribute('text-anchor','middle'); t2.setAttribute('font-size','12'); t2.setAttribute('fill','#5a4635'); t2.textContent=role; svg.appendChild(t2);
-    badgeWrap.appendChild(svg);
-  }
-
-  /* КОСТЁР (реальная логика) */
-  var running=false, SP=[], RAF=null, lastT=0, W=0, H=0;
-  var fireCanvas=document.getElementById('fireCanvas');
-  var sparksCanvas=document.getElementById('sparksCanvas');
-  var fctx=fireCanvas.getContext('2d');
-  var sctx=sparksCanvas.getContext('2d');
-
-  function resizeFX(){ W=innerWidth; H=innerHeight; [fireCanvas,sparksCanvas].forEach(function(c){ c.width=W; c.height=H; c.style.width='100%'; c.style.height='100%'; }); }
-  window.addEventListener('resize', resizeFX);
-
-  function drawFire(ctx,t){
-    ctx.clearRect(0,0,W,H);
-    var baseW = Math.min(W, 900);
-    for(var i=0;i<30;i++){
-      var sway = Math.sin(t*0.002 + i)*baseW*0.12;
-      var jitter = (Math.random()-0.5)*baseW*0.08;
-      var cx = W*0.5 + sway + jitter;
-      var cy = H - 28 - Math.random()*40;
-      var rad = baseW*(0.06 + Math.random()*0.10);
-      ctx.fillStyle='hsla('+(28+Math.random()*12)+',95%,'+(55+Math.random()*15)+'%,'+(0.05+Math.random()*0.09)+')';
-      ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
-    }
-    var g=ctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.max(W*0.55,H*0.5));
-    g.addColorStop(0,'rgba(255,170,70,0.28)'); g.addColorStop(1,'rgba(255,170,70,0)');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  }
-  function makeSpark(){
-    var sx=W*(0.30+Math.random()*0.40), sy=H+Math.random()*30, v0=90+Math.random()*160, vx=(Math.random()*2 - 1)*42;
-    var life=1+Math.random()*1.6, size=1+Math.random()*2.8, hue=28+Math.random()*14, phase=Math.random()*Math.PI*2;
-    return {x:sx,y:sy,vx:vx,vy:-v0,life:life,maxLife:life,size:size,hue:hue,phase:phase};
-  }
-  function loop(t){
-    if(!running) return;
-    var dt=Math.min(0.05,(t-(lastT||t))/1000); lastT=t;
-    drawFire(fctx,t);
-    sctx.clearRect(0,0,W,H); sctx.globalCom
-  ctx.clearRect(0,0,W,H);
-    var baseW = Math.min(W, 900);
-    for(var i=0;i<30;i++){
-      var sway = Math.sin(t*0.002 + i)*baseW*0.12;
-      var jitter = (Math.random()-0.5)*baseW*0.08;
-      var cx = W*0.5 + sway + jitter;
-      var cy = H - 28 - Math.random()*40;
-      var rad = baseW*(0.06 + Math.random()*0.10);
-      ctx.fillStyle='hsla('+(28+Math.random()*12)+',95%,'+(55+Math.random()*15)+'%,'+(0.05+Math.random()*0.09)+')';
-      ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2); ctx.fill();
-    }
-    var g=ctx.createRadialGradient(W*0.5,H*0.98,10,W*0.5,H*0.98,Math.max(W*0.55,H*0.5));
-    g.addColorStop(0,'rgba(255,170,70,0.28)'); g.addColorStop(1,'rgba(255,170,70,0)');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  }
-  function makeSpark(){
-    var sx=W*(0.30+Math.random()*0.40), sy=H+Math.random()*30, v0=90+Math.random()*160, vx=(Math.random()*2 - 1)*42;
-    var life=1+Math.random()*1.6, size=1+Math.random()*2.8, hue=28+Math.random()*14, phase=Math.random()*Math.PI*2;
-    return {x:sx,y:sy,vx:vx,vy:-v0,life:life,maxLife:life,size:size,hue:hue,phase:phase};
-  }
-  function loop(t){
-    if(!running) return;
-    var dt=Math.min(0.05,(t-(lastT||t))/1000); lastT=t;
-    drawFire(fctx,t);
-    sctx.clearRect(0,0,W,H); sctx.globalCompositeOperation='lighter';
-    for(var i=0;i<SP.length;i++){
-      var p=SP[i], wind=Math.sin(t*0.001+p.phase)*24, jitter=Math.sin(t*0.006+p.phase)*4;
-      p.vx+=(wind*0.4)*dt; p.x+=(p.vx+jitter)*dt; p.y+=p.vy*dt; p.life-=dt;
-      var k=Math.max(0,p.life/p.maxLife), size=p.size*(0.6+0.4*k), alpha=Math.min(1,0.18+k*0.9);
-      var trail=sctx.createRadialGradient(p.x,p.y+size*2,0,p.x,p.y+size*2,size*6);
-      trail.addColorStop(0,'hsla('+(p.hue+5)+',90%,55%,'+(alpha*0.35)+')'); trail.addColorStop(1,'hsla(25,90%,50%,0)');
-      sctx.fillStyle=trail; sctx.beginPath(); sctx.arc(p.x,p.y+size*2,size*4,0,Math.PI*2); sctx.fill();
-      var grad=sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,size*3);
-      grad.addColorStop(0,'hsla(50,100%,85%,'+alpha+')'); grad.addColorStop(0.35,'hsla('+p.hue+',95%,60%,'+(alpha*0.9)+')');
-      grad.addColorStop(1,'hsla('+(p.hue+10)+',90%,40%,0)'); sctx.fillStyle=grad; sctx.beginPath(); sctx.arc(p.x,p.y,size*2.2,0,Math.PI*2); sctx.fill();
-      if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) SP[i]=makeSpark();
-    }
-    sctx.globalCompositeOperation='source-over';
-    RAF=requestAnimationFrame(loop);
-  }
-  function startFX(){ if(running) return; running=true; resizeFX(); SP=Array.from({length:180},makeSpark); fireCanvas.style.display='block'; sparksCanvas.style.display='block'; lastT=0; RAF=requestAnimationFrame(loop); }
-  function stopFX(){ running=false; if(RAF) cancelAnimationFrame(RAF); fireCanvas.style.display='none'; sparksCanvas.style.display='none'; }
-
-  // реальная функция для инпута (подменяет фолбэк)
-  window.__toggleCampfire = function(checked){
-    if(checked){
-      document.body.classList.add('camp-night'); startFX();
-      try{ fireAudio.volume=0.5; fireAudio.play().catch(function(){}); }catch(_){}
-    }else{
-      document.body.classList.remove('camp-night'); stopFX();
-      try{ fireAudio.pause(); fireAudio.currentTime=0; }catch(_){}
-    }
-  };
-
-  // если интро кликнули до загрузки JS — дорисуем вопрос сейчас
-  if (window.__quizShouldStart && !document.body.classList.contains('prestart')) {
-    renderQuestion();
-  }
-
-  // на всякий пожарный: если спустя 400мс вопрос так и не появился — форснём
-  setTimeout(function(){
-    if (!stage.querySelector('.answers-grid') && !document.body.classList.contains('prestart')){
-      renderQuestion();
-    }
-  }, 400);
-
-  // обновить отступ
-  window.addEventListener('resize', function(){ updateNavPadding(); });
-  updateNavPadding();
+nextBtn.addEventListener('click',()=>{
+  if(!pick) return; scores[pick]=(scores[pick]||0)+1; i++;
+  if(i<QUESTIONS.length) renderQuestion(); else showResult();
 });
+
+function showResult(){
+  flames.forEach(f=>f.classList.add('on'));
+  quiz.style.display='none'; result.style.display='block';
+  const winner=Object.keys(scores).reduce((a,b)=>(scores[a]||0)>(scores[b]||0)?a:b);
+  roleEl.textContent=winner; descEl.textContent=ROLES[winner];
+
+  const ICON={
+    "Королева красоты":"👑","Любительница компота":"🥤","Самая активная участница":"⭐",
+    "Тайная проказница":"😼","Игрок в карты на карамельки":"🃏","Спортсменка":"🏅"
+  }[winner]||"⭐";
+
+  badge.innerHTML=`<svg viewBox="0 0 200 200" width="100%" height="100%">
+    <defs>
+      <radialGradient id="g" cx="50%" cy="45%" r="70%">
+        <stop offset="0%" stop-color="#fff7d8"/><stop offset="55%" stop-color="#f0c26e"/><stop offset="100%" stop-color="#c3922a"/>
+      </radialGradient>
+      <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity=".25"/>
+      </filter>
+    </defs>
+    <circle cx="100" cy="100" r="78" fill="url(#g)" filter="url(#ds)" stroke="#b89454" stroke-width="6"/>
+    <text x="100" y="108" text-anchor="middle" dominant-baseline="middle" font-size="64" font-weight="700">${ICON}</text>
+  </svg>`;
+}
+
+/* ===== КОСТЁР (широкий экран) ===== */
+const cv=document.getElementById('fx'), ctx=cv.getContext('2d'), audio=document.getElementById('fireAudio');
+let run=false, W=0,H=0,parts=[];
+function size(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H;cv.style.display=run?'block':'none'}
+function spark(){ // искры по всей нижней зоне
+  const sx=W*(0.15+Math.random()*0.70), sy=H+Math.random()*30;
+  const v0=90+Math.random()*160, vx=(Math.random()*2-1)*60;
+  return {x:sx,y:sy,vx,vy:-v0,life:1+Math.random()*1.2,s:1+Math.random()*2.2};
+}
+function drawFire(ctx,t){
+  ctx.clearRect(0,0,W,H);
+  const baseW=W;
+  for(let k=0;k<36;k++){
+    const sway=Math.sin(t*0.0018+k)*baseW*0.18;
+    const jitter=(Math.random()-0.5)*baseW*0.12;
+    const cx=W*0.5+sway+jitter, cy=H-28-Math.random()*40, r=baseW*(0.04+Math.random()*0.09);
+    ctx.fillStyle=`hsla(${28+Math.random()*12},95%,${55+Math.random()*15}%,${0.06+Math.random()*0.06})`;
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  }
+  const g=ctx.createRadialGradient(W*.5,H*.98,10, W*.5,H*.98, Math.max(W,H)*0.7);
+  g.addColorStop(0,'rgba(255,170,70,0.30)'); g.addColorStop(1,'rgba(255,170,70,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+function loop(ts){
+  if(!run) return;
+  drawFire(ctx,ts);
+  ctx.globalCompositeOperation='lighter';
+  for(let j=0;j<parts.length;j++){
+    const p=parts[j]; p.x+=p.vx*.016; p.y+=p.vy*.016; p.life-=.016;
+    const a=Math.max(0,Math.min(1,p.life)), sz=p.s*(.8+.4*a);
+    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,sz*3);
+    g.addColorStop(0,`hsla(50,100%,85%,${a})`); g.addColorStop(.4,`hsla(35,95%,55%,${a*.9})`); g.addColorStop(1,'hsla(30,90%,40%,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,sz*1.8,0,Math.PI*2); ctx.fill();
+    if(p.life<=0||p.y<-20||p.x<-20||p.x>W+20) parts[j]=spark();
+  }
+  ctx.globalCompositeOperation='source-over';
+  requestAnimationFrame(loop);
+}
+function startFire(){if(run) return; run=true; size(); parts=Array.from({length:160},spark); requestAnimationFrame(loop);}
+function stopFire(){run=false; size();}
+window.addEventListener('resize',size);
+document.getElementById('camp').addEventListener('change',e=>{
+  if(e.target.checked){document.body.classList.add('night'); startFire(); try{audio.volume=.5; audio.play().catch(()=>{})}catch(_){}} 
+  else{document.body.classList.remove('night'); stopFire(); try{audio.pause(); audio.currentTime=0}catch(_){}}
+});
+
+/* страховки на ранний клик по интро */
+document.addEventListener('DOMContentLoaded',()=>{ if(window.__startWanted) renderQuestion(); });
+setTimeout(()=>{ if(window.__startWanted && !stage.querySelector('.grid')) renderQuestion(); },300);
 </script>
-</body>
-</html>
+</body></html>
